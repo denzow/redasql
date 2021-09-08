@@ -1,2 +1,2 @@
-# redaql
+# redasql
 redash query tool like psql
