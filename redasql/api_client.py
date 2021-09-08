@@ -9,9 +9,9 @@ class ApiClient:
         self.session.headers.update({"Authorization": "Key {}".format(api_key)})
 
     def get_queries(self):
-        return self._get(
-            f'{self.redash_url}/api/queries'
-        )
+        res = self._get('/api/queries')
+        print(res.json())
+        return res
 
     def _get(self, path, **kwargs):
         return self._request("GET", path, **kwargs)
