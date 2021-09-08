@@ -1,0 +1,2 @@
+export REDASH_ENDPOINT_URL=http://localhost
+export REDASH_APIKEY=XXXXXXXX
