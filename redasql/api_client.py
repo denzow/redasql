@@ -10,8 +10,11 @@ class ApiClient:
 
     def get_queries(self):
         res = self._get('/api/queries')
-        print(res.json())
-        return res
+        return res.json()
+
+    def execute_query(self, query: str, data_source_id: int):
+        res = self._post('/api/query_results', json={'query': f'{query}', 'data_source_id': data_source_id})
+        return res.json()
 
     def _get(self, path, **kwargs):
         return self._request("GET", path, **kwargs)

@@ -17,7 +17,10 @@ class MainCommand:
         )
 
     def get_queries(self):
-        print(self.client.get_queries())
+        return self.client.get_queries()
+
+    def execute_query(self):
+        return self.client.execute_query(query='SELECT * FROM country;', data_source_id=1)
 
 
 if __name__ == '__main__':
@@ -26,4 +29,4 @@ if __name__ == '__main__':
         endpoint=os.environ['REDASH_ENDPOINT_URL'],
         api_key=os.environ['REDASH_APIKEY'],
     )
-    print(command.get_queries())
+    print(command.execute_query())
