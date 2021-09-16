@@ -18,6 +18,7 @@ class MainCommand:
         )
         # TODO データソースID固定
         self.datasource_id = 1
+        self.buffer = []
 
     def get_version(self):
         return self.client.get_version()
@@ -33,22 +34,30 @@ class MainCommand:
 
     def loop(self):
         answer = input('SQL> ')
-        result = self.execute_query(
-            query=answer,
-            data_source_id=self.datasource_id
-        )
-        import json
-        print(json.dumps(result, indent=4))
+        self.buffer.append(answer)
+        if answer.strip().endswith(';'):
+            query = '\n'.join(self.buffer)
+            self.buffer = []
+            result = self.execute_query(
+                query=query,
+                data_source_id=self.datasource_id
+            )
+            # TODO: 結果をテーブル形式でいい感じに表示する
+            from prettytable import PrettyTable
+            x = PrettyTable()
+            x.field_names
+            import json
+            print(json.dumps(result, indent=4))
 
 
 def main():
     print(dedent("""
-    ____          _                 _ 
+    ____          _                 _
     |  _ \ ___  __| | __ _ ___  __ _| |
     | |_) / _ \/ _` |/ _` / __|/ _` | |
     |  _ <  __/ (_| | (_| \__ \ (_| | |
     |_| \_\___|\__,_|\__,_|___/\__, |_|
-                                  |_|  
+                                  |_|
     """))
     command = MainCommand(
         endpoint=os.environ['REDASH_ENDPOINT_URL'],
@@ -58,9 +67,6 @@ def main():
     # print(command.execute_query())
     while True:
         command.loop()
-
-
-
 
 
 if __name__ == '__main__':
