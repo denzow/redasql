@@ -1,6 +1,7 @@
 import requests
 import time
 
+
 class ApiClient:
 
     def __init__(self, redash_url: str, api_key: str):
@@ -17,6 +18,9 @@ class ApiClient:
         res_json = res.json()
         return res_json['client_config']['version']
 
+    def get_query_result(self, query_result_id: int):
+        res = self._get(f'/api/query_results/{query_result_id}')
+        return res.json()
 
     def execute_query(self, query: str, data_source_id: int):
         res = self._post('/api/query_results', json={'query': f'{query}', 'data_source_id': data_source_id})
@@ -33,12 +37,11 @@ class ApiClient:
         while True:
             res = self._get(f'/api/jobs/{job_id}')
             res_json = res.json()
-            print(res_json)
 
             if res_json.get('job', {}).get('status') in (3, 4):
-                break
+                query_result_id = res_json['job']['query_result_id']
+                return self.get_query_result(query_result_id)
             time.sleep(1)
-
 
     def _get(self, path, **kwargs):
         return self._request("GET", path, **kwargs)
@@ -51,4 +54,3 @@ class ApiClient:
         response = self.session.request(method, url, **kwargs)
         response.raise_for_status()
         return response
-
