@@ -1,4 +1,5 @@
 import os
+from textwrap import dedent
 from redasql.api_client import ApiClient
 
 
@@ -16,6 +17,9 @@ class MainCommand:
             api_key=self.api_key
         )
 
+    def get_version(self):
+        return self.client.get_version()
+
     def get_queries(self):
         return self.client.get_queries()
 
@@ -24,9 +28,17 @@ class MainCommand:
 
 
 if __name__ == '__main__':
-    print('redasql')
+    print(dedent("""
+    ____          _                 _ 
+    |  _ \ ___  __| | __ _ ___  __ _| |
+    | |_) / _ \/ _` |/ _` / __|/ _` | |
+    |  _ <  __/ (_| | (_| \__ \ (_| | |
+    |_| \_\___|\__,_|\__,_|___/\__, |_|
+                                  |_|  
+    """))
     command = MainCommand(
         endpoint=os.environ['REDASH_ENDPOINT_URL'],
         api_key=os.environ['REDASH_APIKEY'],
     )
-    print(command.execute_query())
+    print(f'server version: {command.get_version()}')
+    # print(command.execute_query())

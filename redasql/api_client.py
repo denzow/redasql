@@ -12,6 +12,12 @@ class ApiClient:
         res = self._get('/api/queries')
         return res.json()
 
+    def get_version(self):
+        res = self._get('/api/session')
+        res_json = res.json()
+        return res_json['client_config']['version']
+
+
     def execute_query(self, query: str, data_source_id: int):
         res = self._post('/api/query_results', json={'query': f'{query}', 'data_source_id': data_source_id})
         return res.json()
