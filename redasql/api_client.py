@@ -1,5 +1,5 @@
 import requests
-
+import time
 
 class ApiClient:
 
@@ -22,7 +22,7 @@ class ApiClient:
         res = self._post('/api/query_results', json={'query': f'{query}', 'data_source_id': data_source_id})
         res_json = res.json()
         # 結果がある場合
-        if 'query_result' in res:
+        if 'query_result' in res_json:
             return res_json
 
         # 結果がない場合はJOB完了を待つしかない
@@ -30,8 +30,15 @@ class ApiClient:
         return self._wait_job(job_id)
 
     def _wait_job(self, job_id: str):
-        res = self._get(f'/api/jobs/{job_id}')
-        print(res)
+        while True:
+            res = self._get(f'/api/jobs/{job_id}')
+            res_json = res.json()
+            print(res_json)
+
+            if res_json.get('job', {}).get('status') in (3, 4):
+                break
+            time.sleep(1)
+
 
     def _get(self, path, **kwargs):
         return self._request("GET", path, **kwargs)
