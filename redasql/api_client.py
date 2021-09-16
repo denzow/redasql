@@ -20,7 +20,18 @@ class ApiClient:
 
     def execute_query(self, query: str, data_source_id: int):
         res = self._post('/api/query_results', json={'query': f'{query}', 'data_source_id': data_source_id})
-        return res.json()
+        res_json = res.json()
+        # 結果がある場合
+        if 'query_result' in res:
+            return res_json
+
+        # 結果がない場合はJOB完了を待つしかない
+        job_id = res_json['job']['id']
+        return self._wait_job(job_id)
+
+    def _wait_job(self, job_id: str):
+        res = self._get(f'/api/jobs/{job_id}')
+        print(res)
 
     def _get(self, path, **kwargs):
         return self._request("GET", path, **kwargs)
