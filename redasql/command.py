@@ -1,6 +1,8 @@
 import os
+import readline
 from textwrap import dedent
 from redasql.api_client import ApiClient
+from redasql.result_formatter import table_formatter
 
 
 class MainCommand:
@@ -19,6 +21,7 @@ class MainCommand:
         # TODO データソースID固定
         self.datasource_id = 1
         self.buffer = []
+        self.formatter = table_formatter
 
     def get_version(self):
         return self.client.get_version()
@@ -42,12 +45,8 @@ class MainCommand:
                 query=query,
                 data_source_id=self.datasource_id
             )
-            # TODO: 結果をテーブル形式でいい感じに表示する
-            from prettytable import PrettyTable
-            x = PrettyTable()
-            x.field_names
-            import json
-            print(json.dumps(result, indent=4))
+            formatted_string = self.formatter(result)
+            print(formatted_string)
 
 
 def main():
