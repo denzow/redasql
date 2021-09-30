@@ -44,13 +44,12 @@ class MainCommand:
         if answer.strip().startswith('\\'):
             import re
             command, *args = re.split(r'\s+', answer.strip())
-            print(command, args)
 
             executors = {r'\d': DescribeCommandExecutor}
             executor = executors.get(command)
             if not executor:
                 return
-            e = executor(self.client)
+            e = executor(self.client, self.datasource_id)
             e.exec(*args)
 
             return

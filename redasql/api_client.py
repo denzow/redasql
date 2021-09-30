@@ -9,6 +9,10 @@ class ApiClient:
         self.session = requests.Session()
         self.session.headers.update({"Authorization": "Key {}".format(api_key)})
 
+    def get_schemas(self, data_source_id: int):
+        res = self._get(f'/api/data_sources/{data_source_id}/schema')
+        return res.json()
+
     def get_queries(self):
         res = self._get('/api/queries')
         return res.json()
