@@ -1,6 +1,8 @@
 import requests
 import time
 
+from redasql.exceptions import QueryRuntimeError
+
 
 class ApiClient:
 
@@ -42,9 +44,16 @@ class ApiClient:
             res = self._get(f'/api/jobs/{job_id}')
             res_json = res.json()
 
-            if res_json.get('job', {}).get('status') in (3, 4):
+            # 3: success
+            if res_json.get('job', {}).get('status') == 3:
                 query_result_id = res_json['job']['query_result_id']
                 return self.get_query_result(query_result_id)
+
+            # 4: error
+            if res_json.get('job', {}).get('status') == 4:
+                error_msg = res_json['job']['error']
+                raise QueryRuntimeError(error_msg)
+
             time.sleep(1)
 
     def _get(self, path, **kwargs):
