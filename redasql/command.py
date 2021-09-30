@@ -37,6 +37,13 @@ class MainCommand:
 
     def loop(self):
         answer = input('SQL> ')
+
+        # TODO
+        # metacommand かのチェックが必要 \dとか
+        if answer.strip().startswith('\\'):
+            print(answer)
+            return
+
         self.buffer.append(answer)
         if answer.strip().endswith(';'):
             query = '\n'.join(self.buffer)
