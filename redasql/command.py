@@ -2,6 +2,7 @@ import os
 import readline
 from textwrap import dedent
 from redasql.api_client import ApiClient
+from redasql.metacommand_executor import DescribeCommandExecutor
 from redasql.result_formatter import table_formatter
 
 
@@ -41,7 +42,17 @@ class MainCommand:
         # TODO
         # metacommand かのチェックが必要 \dとか
         if answer.strip().startswith('\\'):
-            print(answer)
+            import re
+            command, *args = re.split(r'\s+', answer.strip())
+            print(command, args)
+
+            executors = {r'\d': DescribeCommandExecutor}
+            executor = executors.get(command)
+            if not executor:
+                return
+            e = executor(self.client)
+            e.exec(*args)
+
             return
 
         self.buffer.append(answer)
