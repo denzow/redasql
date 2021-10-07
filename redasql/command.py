@@ -1,7 +1,9 @@
 import os
 import readline
+import sys
 from textwrap import dedent
 from redasql.api_client import ApiClient
+from redasql.exceptions import RedasqlException
 from redasql.metacommand_executor import DescribeCommandExecutor
 from redasql.result_formatter import table_formatter
 
@@ -37,6 +39,21 @@ class MainCommand:
         )
 
     def loop(self):
+        while True:
+            try:
+                self.main()
+            except RedasqlException as e:
+                print(e)
+            except KeyboardInterrupt:
+                # ctrl + c では終了させない
+                # TODO: SQL> SQL> SQL> ってなるのを直したい
+                self.buffer = []
+            except EOFError:
+                # ctrl + d で終了させる
+                print('Sayonara!')
+                sys.exit(0)
+
+    def main(self):
         answer = input('SQL> ')
 
         # TODO
@@ -81,8 +98,7 @@ def main():
     )
     print(f'server version: {command.get_version()}')
     # print(command.execute_query())
-    while True:
-        command.loop()
+    command.loop()
 
 
 if __name__ == '__main__':
