@@ -13,9 +13,10 @@ class MetaCommandReturn:
 
 
 class MetaCommandBase(ABC):
-    def __init__(self, client: ApiClient, data_source):
+    def __init__(self, client: ApiClient, data_source, pivoted: bool):
         self.client = client
         self.data_source = data_source
+        self.pivoted = pivoted
 
     @abstractmethod
     def exec(*args, **kwargs) -> List[MetaCommandReturn]:
@@ -47,4 +48,11 @@ class ConnectCommandExecutor(MetaCommandBase):
         return [MetaCommandReturn(
           value=data_source,
           attr_name='data_source'
+        )]
+
+class ChangeFormatterCommandExecutor(MetaCommandBase):
+    def exec(self, *args, **kwargs) -> List[MetaCommandReturn]:
+        return [MetaCommandReturn(
+            value=not self.pivoted,
+            attr_name='pivoted'
         )]

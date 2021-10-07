@@ -5,8 +5,8 @@ import sys
 from textwrap import dedent
 from redasql.api_client import ApiClient
 from redasql.exceptions import RedasqlException
-from redasql.metacommand_executor import ConnectCommandExecutor, DescribeCommandExecutor
-from redasql.result_formatter import table_formatter
+from redasql.metacommand_executor import ConnectCommandExecutor, DescribeCommandExecutor, ChangeFormatterCommandExecutor
+from redasql.result_formatter import table_formatter, pivoted_formatter
 
 
 class MainCommand:
@@ -22,10 +22,11 @@ class MainCommand:
             redash_url=self.endpoint,
             api_key=self.api_key
         )
+        self.pivoted = False
         # TODO かたていぎ
         self.data_source = None
         self.buffer = []
-        self.formatter = table_formatter
+        self.formatter = pivoted_formatter
 
     def get_version(self):
         return self.client.get_version()
@@ -63,14 +64,16 @@ class MainCommand:
             executors = {
                 r'\d': DescribeCommandExecutor,
                 r'\c': ConnectCommandExecutor,
+                r'\x': ChangeFormatterCommandExecutor,
             }
             executor = executors.get(command)
             if not executor:
                 return
-            e = executor(self.client, self.data_source)
+            e = executor(self.client, self.data_source, self.pivoted)
             results = e.exec(*args)
             for result in results:
                 setattr(self, result.attr_name, result.value)
+
             return
 
         self.buffer.append(answer)
