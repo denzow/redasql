@@ -1,4 +1,5 @@
 import os
+import re
 import readline
 import sys
 from textwrap import dedent
@@ -59,7 +60,6 @@ class MainCommand:
         # TODO
         # metacommand かのチェックが必要 \dとか
         if answer.strip().startswith('\\'):
-            import re
             command, *args = re.split(r'\s+', answer.strip())
 
             executors = {r'\d': DescribeCommandExecutor}

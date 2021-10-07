@@ -1,7 +1,7 @@
 import requests
 import time
 
-from redasql.exceptions import QueryRuntimeError
+from redasql.exceptions import QueryRuntimeError, DataSourceNotFoundError
 
 
 class ApiClient:
@@ -10,6 +10,15 @@ class ApiClient:
         self.redash_url = redash_url
         self.session = requests.Session()
         self.session.headers.update({"Authorization": "Key {}".format(api_key)})
+
+    def get_data_source_by_name(self, name: str):
+        res = self._get('/api/data_sources')
+        res_json = res.json()
+
+        for ds in res_json:
+            if ds['name'] == name:
+                return ds
+        raise DataSourceNotFoundError()
 
     def get_schemas(self, data_source_id: int):
         res = self._get(f'/api/data_sources/{data_source_id}/schema')

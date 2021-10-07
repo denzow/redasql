@@ -4,3 +4,7 @@ class RedasqlException(Exception):
 
 class QueryRuntimeError(RedasqlException):
     """ クエリ実行時のエラー """
+
+
+class DataSourceNotFoundError(RedasqlException):
+    """ データソースがないエラー """
