@@ -1,16 +1,50 @@
+import dataclasses
+from typing import List
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
 from redasql.api_client import ApiClient
 
 
-class DescribeCommandExecutor:
+@dataclasses.dataclass
+class MetaCommandReturn:
+    attr_name: str
+    value: object
 
-    def __init__(self, client: ApiClient, datasource_id: int):
+
+class MetaCommandBase(ABC):
+    def __init__(self, client: ApiClient, data_source):
         self.client = client
-        self.datasource_id = datasource_id
+        self.data_source = data_source
+
+    @abstractmethod
+    def exec(*args, **kwargs) -> List[MetaCommandReturn]:
+        pass
+
+
+
+
+class DescribeCommandExecutor(MetaCommandBase):
 
     def exec(self, schema_name, *args, **kwargs):
-        result = self.client.get_schemas(self.datasource_id)
+        result = self.client.get_schemas(self.data_source['id'])
         for schema in result['schema']:
             if schema['name'].lower() == schema_name.lower():
                 for col in schema['columns']:
                     print(col)
                 break
+        return []
+
+
+class ConnectCommandExecutor(MetaCommandBase):
+
+    def exec(self, data_source_name: str=None, *args, **kwargs):
+        if not data_source_name:
+            for ds in self.client.get_data_sources():
+                print(ds['name'])
+            return []
+        data_source = self.client.get_data_source_by_name(data_source_name)
+        return [MetaCommandReturn(
+          value=data_source,
+          attr_name='data_source'
+        )]

@@ -5,7 +5,7 @@ import sys
 from textwrap import dedent
 from redasql.api_client import ApiClient
 from redasql.exceptions import RedasqlException
-from redasql.metacommand_executor import DescribeCommandExecutor
+from redasql.metacommand_executor import ConnectCommandExecutor, DescribeCommandExecutor
 from redasql.result_formatter import table_formatter
 
 
@@ -22,8 +22,8 @@ class MainCommand:
             redash_url=self.endpoint,
             api_key=self.api_key
         )
-        # TODO データソースID固定
-        self.datasource_id = 1
+        # TODO かたていぎ
+        self.data_source = None
         self.buffer = []
         self.formatter = table_formatter
 
@@ -55,20 +55,22 @@ class MainCommand:
                 sys.exit(0)
 
     def main(self):
-        answer = input('SQL> ')
+        answer = input(self._get_prompt())
 
-        # TODO
         # metacommand かのチェックが必要 \dとか
         if answer.strip().startswith('\\'):
             command, *args = re.split(r'\s+', answer.strip())
-
-            executors = {r'\d': DescribeCommandExecutor}
+            executors = {
+                r'\d': DescribeCommandExecutor,
+                r'\c': ConnectCommandExecutor,
+            }
             executor = executors.get(command)
             if not executor:
                 return
-            e = executor(self.client, self.datasource_id)
-            e.exec(*args)
-
+            e = executor(self.client, self.data_source)
+            results = e.exec(*args)
+            for result in results:
+                setattr(self, result.attr_name, result.value)
             return
 
         self.buffer.append(answer)
@@ -77,11 +79,15 @@ class MainCommand:
             self.buffer = []
             result = self.execute_query(
                 query=query,
-                data_source_id=self.datasource_id
+                data_source_id=self.data_source['id']
             )
             formatted_string = self.formatter(result)
             print(formatted_string)
 
+    def _get_prompt(self):
+        if self.data_source:
+            return f'{self.data_source["name"]}=# '
+        return '(No DataSource)=# '
 
 def main():
     print(dedent("""

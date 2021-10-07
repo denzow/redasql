@@ -11,6 +11,11 @@ class ApiClient:
         self.session = requests.Session()
         self.session.headers.update({"Authorization": "Key {}".format(api_key)})
 
+    def get_data_sources(self):
+        res = self._get('/api/data_sources')
+        res_json = res.json()
+        return res_json
+
     def get_data_source_by_name(self, name: str):
         res = self._get('/api/data_sources')
         res_json = res.json()
@@ -18,7 +23,7 @@ class ApiClient:
         for ds in res_json:
             if ds['name'] == name:
                 return ds
-        raise DataSourceNotFoundError()
+        raise DataSourceNotFoundError(f'data source name [{name}] is not found.')
 
     def get_schemas(self, data_source_id: int):
         res = self._get(f'/api/data_sources/{data_source_id}/schema')
