@@ -1,9 +1,11 @@
+import argparse
 import os
 import re
 import readline
 import sys
 from textwrap import dedent
 from os.path import expanduser
+from typing import Optional
 
 from prompt_toolkit.history import FileHistory
 
@@ -13,12 +15,14 @@ from redasql.metacommand_executor import ConnectCommandExecutor, DescribeCommand
 from redasql.result_formatter import table_formatter, pivoted_formatter
 from prompt_toolkit import prompt
 
+
 class MainCommand:
 
     def __init__(
         self,
         endpoint: str,
         api_key: str,
+        data_source: Optional[str],
     ):
         self.endpoint = endpoint
         self.api_key = api_key
@@ -29,6 +33,12 @@ class MainCommand:
         self.pivoted = False
         # TODO かたていぎ
         self.data_source = None
+        if data_source:
+            executor = ConnectCommandExecutor(self.client, None, False)
+            results = executor.exec(data_source_name=data_source)
+            for result in results:
+                setattr(self, result.attr_name, result.value)
+
         self.buffer = []
 
         self.history = FileHistory(f'{expanduser("~")}/.redasql.hist')
@@ -102,7 +112,8 @@ class MainCommand:
             return pivoted_formatter
         return table_formatter
 
-def main():
+
+def main(data_source: str):
     print(dedent("""
     ____          _                 _
     |  _ \ ___  __| | __ _ ___  __ _| |
@@ -114,11 +125,20 @@ def main():
     command = MainCommand(
         endpoint=os.environ['REDASH_ENDPOINT_URL'],
         api_key=os.environ['REDASH_APIKEY'],
+        data_source=data_source,
     )
     print(f'server version: {command.get_version()}')
     # print(command.execute_query())
     command.loop()
 
 
+def init():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--data-source', default=None)
+    args = parser.parse_args()
+    return args.data_source
+
+
 if __name__ == '__main__':
-    main()
+    data_source = init()
+    main(data_source=data_source)
