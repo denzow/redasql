@@ -3,6 +3,10 @@ import re
 import readline
 import sys
 from textwrap import dedent
+from os.path import expanduser
+
+from prompt_toolkit.history import FileHistory
+
 from redasql.api_client import ApiClient
 from redasql.exceptions import RedasqlException
 from redasql.metacommand_executor import ConnectCommandExecutor, DescribeCommandExecutor, ChangeFormatterCommandExecutor
@@ -26,6 +30,8 @@ class MainCommand:
         # TODO かたていぎ
         self.data_source = None
         self.buffer = []
+
+        self.history = FileHistory(f'{expanduser("~")}/.redasql.hist')
 
     def get_version(self):
         return self.client.get_version()
@@ -55,7 +61,7 @@ class MainCommand:
                 sys.exit(0)
 
     def main(self):
-        answer = prompt(self._get_prompt())
+        answer = prompt(self._get_prompt(), history=self.history)
 
         # metacommand かのチェックが必要 \dとか
         if answer.strip().startswith('\\'):
