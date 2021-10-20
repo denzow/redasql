@@ -7,7 +7,7 @@ from redasql.api_client import ApiClient
 from redasql.exceptions import RedasqlException
 from redasql.metacommand_executor import ConnectCommandExecutor, DescribeCommandExecutor, ChangeFormatterCommandExecutor
 from redasql.result_formatter import table_formatter, pivoted_formatter
-
+from prompt_toolkit import prompt
 
 class MainCommand:
 
@@ -55,7 +55,7 @@ class MainCommand:
                 sys.exit(0)
 
     def main(self):
-        answer = input(self._get_prompt())
+        answer = prompt(self._get_prompt())
 
         # metacommand かのチェックが必要 \dとか
         if answer.strip().startswith('\\'):

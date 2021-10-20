@@ -40,6 +40,17 @@ wcwidth = "*"
 tests = ["pytest", "pytest-cov"]
 
 [[package]]
+name = "prompt-toolkit"
+version = "3.0.20"
+description = "Library for building powerful interactive command lines in Python"
+category = "main"
+optional = false
+python-versions = ">=3.6.2"
+
+[package.dependencies]
+wcwidth = "*"
+
+[[package]]
 name = "requests"
 version = "2.26.0"
 description = "Python HTTP for Humans."
@@ -81,7 +92,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "2481af957551e710cad694af87473ceb36d5eced83e1c8340861bdd7e7076c3e"
+content-hash = "ef46541bdbdc17c2406cdaec3a6388b7971bbfb85b14575c024b54d829ece330"
 
 [metadata.files]
 certifi = [
@@ -99,6 +110,10 @@ idna = [
 prettytable = [
     {file = "prettytable-2.2.0-py3-none-any.whl", hash = "sha256:b186f1db9c9377cb552cfa95a3b7a0feab6ec55d7cad7e0763bdcbea1e8f4687"},
     {file = "prettytable-2.2.0.tar.gz", hash = "sha256:bd81678c108e6c73d4f1e47cd4283de301faaa6ff6220bcd1d4022038c56b416"},
+]
+prompt-toolkit = [
+    {file = "prompt_toolkit-3.0.20-py3-none-any.whl", hash = "sha256:6076e46efae19b1e0ca1ec003ed37a933dc94b4d20f486235d436e64771dcd5c"},
+    {file = "prompt_toolkit-3.0.20.tar.gz", hash = "sha256:eb71d5a6b72ce6db177af4a7d4d7085b99756bf656d98ffcc4fecd36850eea6c"},
 ]
 requests = [
     {file = "requests-2.26.0-py2.py3-none-any.whl", hash = "sha256:6c1246513ecd5ecd4528a0906f910e8f0f9c6b8ec72030dc9fd154dc1a6efd24"},

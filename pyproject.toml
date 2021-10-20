@@ -8,5 +8,6 @@ authors = ["denzow <denzow@gmail.com>"]
 python = "^3.8"
 requests = "^2.26.0"
 prettytable = "^2.2.0"
+prompt-toolkit = "^3.0.20"
 
 [tool.poetry.dev-dependencies]
