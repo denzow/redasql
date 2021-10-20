@@ -26,7 +26,6 @@ class MainCommand:
         # TODO かたていぎ
         self.data_source = None
         self.buffer = []
-        self.formatter = pivoted_formatter
 
     def get_version(self):
         return self.client.get_version()
@@ -84,13 +83,18 @@ class MainCommand:
                 query=query,
                 data_source_id=self.data_source['id']
             )
-            formatted_string = self.formatter(result)
+            formatted_string = self._get_formatter()(result)
             print(formatted_string)
 
     def _get_prompt(self):
         if self.data_source:
             return f'{self.data_source["name"]}=# '
         return '(No DataSource)=# '
+
+    def _get_formatter(self):
+        if self.pivoted:
+            return pivoted_formatter
+        return table_formatter
 
 def main():
     print(dedent("""
