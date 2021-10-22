@@ -1,14 +1,10 @@
-import dataclasses
-from typing import List
+from typing import List, Optional
 from abc import ABC, abstractmethod
 
 from redasql.api_client import ApiClient
+from redasql.dto import MetaCommandReturnList, NewAttribute
 
 
-@dataclasses.dataclass
-class MetaCommandReturn:
-    attr_name: str
-    value: object
 
 
 class MetaCommandBase(ABC):
@@ -18,39 +14,43 @@ class MetaCommandBase(ABC):
         self.pivoted = pivoted
 
     @abstractmethod
-    def exec(*args, **kwargs) -> List[MetaCommandReturn]:
+    def exec(*args, **kwargs) -> Optional[MetaCommandReturnList]:
         pass
 
 
 class DescribeCommandExecutor(MetaCommandBase):
 
-    def exec(self, schema_name, *args, **kwargs):
+    def exec(self, schema_name, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         result = self.client.get_schemas(self.data_source['id'])
         for schema in result['schema']:
             if schema['name'].lower() == schema_name.lower():
                 for col in schema['columns']:
                     print(col)
                 break
-        return []
+        return
 
 
 class ConnectCommandExecutor(MetaCommandBase):
 
-    def exec(self, data_source_name: str=None, *args, **kwargs):
+    def exec(self, data_source_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         if not data_source_name:
             for ds in self.client.get_data_sources():
                 print(f'{ds.name}:{ds.type}')
-            return []
+            return
         data_source = self.client.get_data_source_by_name(data_source_name)
-        return [MetaCommandReturn(
-          value=data_source,
-          attr_name='data_source'
-        )]
+        return MetaCommandReturnList(
+            new_attrs=[NewAttribute(
+                value=data_source,
+                attr_name='data_source'
+            )]
+        )
 
 
 class ChangeFormatterCommandExecutor(MetaCommandBase):
-    def exec(self, *args, **kwargs) -> List[MetaCommandReturn]:
-        return [MetaCommandReturn(
-            value=not self.pivoted,
-            attr_name='pivoted'
-        )]
+    def exec(self, *args, **kwargs) -> MetaCommandReturnList:
+        return MetaCommandReturnList(
+            new_attrs=[NewAttribute(
+                value=not self.pivoted,
+                attr_name='pivoted'
+            )]
+        )

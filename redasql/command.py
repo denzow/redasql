@@ -35,9 +35,9 @@ class MainCommand:
         self.data_source: Optional[DataSourceDTO] = None
         if data_source_name:
             executor = ConnectCommandExecutor(self.client, None, False)
-            results = executor.exec(data_source_name=data_source_name)
-            for result in results:
-                setattr(self, result.attr_name, result.value)
+            meta_command_return_list = executor.exec(data_source_name=data_source_name)
+            if meta_command_return_list:
+                meta_command_return_list.apply(self)
 
         self.buffer = []
 
@@ -72,6 +72,9 @@ class MainCommand:
     def main(self):
         answer = prompt(self._get_prompt(), history=self.history)
 
+        if answer == '':
+            return
+
         # metacommand かのチェックが必要 \dとか
         if answer.strip().startswith('\\'):
             command, *args = re.split(r'\s+', answer.strip())
@@ -84,12 +87,9 @@ class MainCommand:
             if not executor:
                 return
             e = executor(self.client, self.data_source, self.pivoted)
-            results = e.exec(*args)
-            for result in results:
-                setattr(self, result.attr_name, result.value)
-
-            return
-        if answer == '':
+            meta_command_return_list = e.exec(*args)
+            if meta_command_return_list:
+                meta_command_return_list.apply(self)
             return
 
         self.buffer.append(answer)
