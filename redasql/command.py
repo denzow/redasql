@@ -9,6 +9,7 @@ from typing import Optional
 
 from prompt_toolkit.history import FileHistory
 
+import redasql.utils as utils
 from redasql.api_client import ApiClient
 from redasql.dto import DataSourceDTO
 from redasql.exceptions import RedasqlException
@@ -39,7 +40,7 @@ class MainCommand:
             if meta_command_return_list:
                 meta_command_return_list.apply(self)
 
-        self.buffer = []
+        self.input_buffer = []
 
         self.history = FileHistory(f'{expanduser("~")}/.redasql.hist')
 
@@ -63,20 +64,20 @@ class MainCommand:
                 print(e)
             except KeyboardInterrupt:
                 print('Cancel')
-                self.buffer = []
+                self.input_buffer = []
             except EOFError:
-                # ctrl + d で終了させる
                 print('Sayonara!')
                 sys.exit(0)
 
     def main(self):
         answer = prompt(self._get_prompt(), history=self.history)
 
-        if answer == '':
+        # ignore empty line. if no buffer.
+        if not self.input_buffer and utils.is_empty(answer):
             return
+        self.input_buffer.append(answer)
 
-        # metacommand かのチェックが必要 \dとか
-        if answer.strip().startswith('\\'):
+        if utils.is_meta_command(answer):
             command, *args = re.split(r'\s+', answer.strip())
             executors = {
                 r'\d': DescribeCommandExecutor,
@@ -92,10 +93,9 @@ class MainCommand:
                 meta_command_return_list.apply(self)
             return
 
-        self.buffer.append(answer)
-        if answer.strip().endswith(';'):
-            query = '\n'.join(self.buffer)
-            self.buffer = []
+        if utils.is_sql_end(answer):
+            query = '\n'.join(self.input_buffer)
+            self.input_buffer = []
             result = self.execute_query(
                 query=query,
                 data_source_id=self.data_source.id
@@ -107,7 +107,7 @@ class MainCommand:
         data_source_name = '(No DataSource)'
         if self.data_source:
             data_source_name = f'{self.data_source.name}'
-        suffix = '-' if self.buffer else '='
+        suffix = '-' if self.input_buffer else '='
         return f'{data_source_name}{suffix}# '
 
     def _get_formatter(self):
