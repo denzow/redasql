@@ -3,8 +3,7 @@ from abc import ABC, abstractmethod
 
 from redasql.api_client import ApiClient
 from redasql.dto import MetaCommandReturnList, NewAttribute
-
-
+from redasql.exceptions import InvalidMetaCommand
 
 
 class MetaCommandBase(ABC):
@@ -48,9 +47,24 @@ class ConnectCommandExecutor(MetaCommandBase):
 
 class ChangeFormatterCommandExecutor(MetaCommandBase):
     def exec(self, *args, **kwargs) -> MetaCommandReturnList:
+        new_pivoted = not self.pivoted
+        print(f'set pivoted [{new_pivoted}]')
         return MetaCommandReturnList(
             new_attrs=[NewAttribute(
                 value=not self.pivoted,
                 attr_name='pivoted'
             )]
         )
+
+
+def meta_command_factory(command: str):
+    executors = {
+        r'\d': DescribeCommandExecutor,
+        r'\c': ConnectCommandExecutor,
+        r'\x': ChangeFormatterCommandExecutor,
+    }
+    executor = executors.get(command)
+    if not executor:
+        raise InvalidMetaCommand(f'{command} is not a valid meta command.')
+
+    return executor

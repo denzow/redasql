@@ -12,3 +12,7 @@ class QueryTimeoutError(RedasqlException):
 
 class DataSourceNotFoundError(RedasqlException):
     """ not found datasource name """
+
+
+class InvalidMetaCommand(RedasqlException):
+    """ invalid meta command"""

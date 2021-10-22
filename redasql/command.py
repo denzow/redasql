@@ -6,19 +6,19 @@ from textwrap import dedent
 from os.path import expanduser
 from typing import Optional
 
+from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
 
 import redasql.utils as utils
 from redasql.api_client import ApiClient
-from redasql.dto import DataSourceResponse
+from redasql.dto import CommandArgs, DataSourceResponse
 from redasql.exceptions import RedasqlException
 from redasql.metacommand_executor import (
     ConnectCommandExecutor,
-    DescribeCommandExecutor,
-    ChangeFormatterCommandExecutor
+    meta_command_factory,
 )
 from redasql.result_formatter import table_formatter, pivoted_formatter
-from prompt_toolkit import prompt
+from redasql.__version__ import __VERSION__
 
 
 class MainCommand:
@@ -29,8 +29,8 @@ class MainCommand:
         api_key: str,
         data_source_name: Optional[str],
     ):
-        self.endpoint = endpoint
-        self.api_key = api_key
+        self.endpoint = endpoint if endpoint else os.environ['REDASQL_REDASH_ENDPOINT']
+        self.api_key = api_key if api_key else os.environ['REDASQL_REDASH_APIKEY']
         self.client = ApiClient(
             redash_url=self.endpoint,
             api_key=self.api_key
@@ -46,6 +46,21 @@ class MainCommand:
         self.input_buffer = []
 
         self.history = FileHistory(f'{expanduser("~")}/.redasql.hist')
+
+    def splash(self):
+        print(dedent(f"""
+        ____          _                 _
+        |  _ \ ___  __| | __ _ ___  __ _| |
+        | |_) / _ \/ _` |/ _` / __|/ _` | |
+        |  _ <  __/ (_| | (_| \__ \ (_| | |
+        |_| \_\___|\__,_|\__,_|___/\__, |_|
+                                      |_|
+            - redash query cli tool -
+
+        SUCCESS CONNECT
+        - server version {self.get_version()}
+        - client version {__VERSION__}
+        """))
 
     def get_version(self):
         return self.client.get_version()
@@ -101,14 +116,7 @@ class MainCommand:
 
     def execute_meta_command_handler(self, input_string):
         command, *args = re.split(r'\s+', input_string.strip())
-        executors = {
-            r'\d': DescribeCommandExecutor,
-            r'\c': ConnectCommandExecutor,
-            r'\x': ChangeFormatterCommandExecutor,
-        }
-        executor = executors.get(command)
-        if not executor:
-            return
+        executor = meta_command_factory(command)
         e = executor(self.client, self.data_source, self.pivoted)
         meta_command_return_list = e.exec(*args)
         if meta_command_return_list:
@@ -127,31 +135,48 @@ class MainCommand:
         return table_formatter
 
 
-def main(data_source: str):
-    print(dedent("""
-    ____          _                 _
-    |  _ \ ___  __| | __ _ ___  __ _| |
-    | |_) / _ \/ _` |/ _` / __|/ _` | |
-    |  _ <  __/ (_| | (_| \__ \ (_| | |
-    |_| \_\___|\__,_|\__,_|___/\__, |_|
-                                  |_|
-    """))
-    command = MainCommand(
-        endpoint=os.environ['REDASH_ENDPOINT_URL'],
-        api_key=os.environ['REDASH_APIKEY'],
-        data_source_name=data_source,
-    )
-    print(f'server version: {command.get_version()}')
+def main():
+    args = init()
+    try:
+        command = MainCommand(**args.to_dict())
+        command.splash()
+    except Exception as e:
+        print(f'[ERROR] {e}\n')
+        sys.exit(1)
+
     command.loop()
 
 
 def init():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--data-source', default=None)
+    parser.add_argument(
+        '-k',
+        '--api-key',
+        help='redash api key',
+        default=None,
+    )
+    parser.add_argument(
+        '-s',
+        '--server-host',
+        help='redash host i.e) https://your-redash-server/',
+        default=None,
+    )
+    parser.add_argument(
+        '-d',
+        '--data-source',
+        help=dedent("""
+        initial datasource name.
+        if not set, no datasource selected.
+        """),
+        default=None
+    )
     args = parser.parse_args()
-    return args.data_source
+    return CommandArgs(
+        api_key=args.api_key,
+        endpoint=args.server_host,
+        data_source_name=args.data_source,
+    )
 
 
 if __name__ == '__main__':
-    data_source = init()
-    main(data_source=data_source)
+    main()

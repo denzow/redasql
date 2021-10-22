@@ -4,6 +4,16 @@ import dataclasses
 
 
 @dataclasses.dataclass(frozen=True)
+class CommandArgs:
+    api_key: Optional[str]
+    endpoint: Optional[str]
+    data_source_name: Optional[str]
+
+    def to_dict(self):
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass(frozen=True)
 class DataSourceResponse:
     """
     response for datasources api

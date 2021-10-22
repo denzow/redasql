@@ -18,7 +18,7 @@ class ApiClient:
         self.session.headers.update({'Authorization': f'Key {api_key}'})
 
     def get_data_sources(self) -> List[DataSourceResponse]:
-        res = self._get('/api/data_sources')
+        res = self._get('api/data_sources')
         res_json = res.json()
         return [DataSourceResponse.from_response(ds) for ds in res_json]
 
@@ -29,27 +29,27 @@ class ApiClient:
         raise DataSourceNotFoundError(f'data source name [{name}] is not found.')
 
     def get_schemas(self, data_source_id: int):
-        res = self._get(f'/api/data_sources/{data_source_id}/schema')
+        res = self._get(f'api/data_sources/{data_source_id}/schema')
         return res.json()
 
     def get_queries(self):
-        res = self._get('/api/queries')
+        res = self._get('api/queries')
         return res.json()
 
     def get_version(self):
-        res = self._get('/api/session')
+        res = self._get('api/session')
         res_json = res.json()
         return res_json['client_config']['version']
 
     def get_query_result(self, query_result_id: int) -> QueryResultResponse:
-        res = self._get(f'/api/query_results/{query_result_id}')
+        res = self._get(f'api/query_results/{query_result_id}')
         return QueryResultResponse.from_response(res.json()['query_result'])
 
     def execute_query(
             self, query: str, data_source_id: int, max_age: int = -1, timeout=10*60
     ) -> QueryResultResponse:
         res = self._post(
-            '/api/query_results',
+            'api/query_results',
             json={
                 'query': f'{query}',
                 'data_source_id': data_source_id,
@@ -68,7 +68,7 @@ class ApiClient:
     def _wait_job(self, job_id: str, timeout: int):
         retry_counter = 0
         while True:
-            res = self._get(f'/api/jobs/{job_id}')
+            res = self._get(f'api/jobs/{job_id}')
             res_json = res.json()
 
             # 3: success
