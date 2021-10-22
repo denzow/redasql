@@ -1,10 +1,14 @@
 class RedasqlException(Exception):
-    """ 基底エラー例外 """
+    """ base exception """
 
 
 class QueryRuntimeError(RedasqlException):
-    """ クエリ実行時のエラー """
+    """ redash said, sql error """
+
+
+class QueryTimeoutError(RedasqlException):
+    """ too long """
 
 
 class DataSourceNotFoundError(RedasqlException):
-    """ データソースがないエラー """
+    """ not found datasource name """

@@ -2,23 +2,27 @@ import requests
 import time
 from typing import Optional, List
 
-from redasql.dto import DataSourceDTO
-from redasql.exceptions import QueryRuntimeError, DataSourceNotFoundError
+from redasql.dto import DataSourceResponse, QueryResultResponse
+from redasql.exceptions import (
+    QueryRuntimeError,
+    DataSourceNotFoundError,
+    QueryTimeoutError,
+)
 
 
 class ApiClient:
 
     def __init__(self, redash_url: str, api_key: str):
-        self.redash_url = redash_url
+        self.redash_url = redash_url.rstrip('/')
         self.session = requests.Session()
         self.session.headers.update({'Authorization': f'Key {api_key}'})
 
-    def get_data_sources(self) -> List[DataSourceDTO]:
+    def get_data_sources(self) -> List[DataSourceResponse]:
         res = self._get('/api/data_sources')
         res_json = res.json()
-        return [DataSourceDTO.from_response(ds) for ds in res_json]
+        return [DataSourceResponse.from_response(ds) for ds in res_json]
 
-    def get_data_source_by_name(self, name: str) -> Optional[DataSourceDTO]:
+    def get_data_source_by_name(self, name: str) -> Optional[DataSourceResponse]:
         for ds in self.get_data_sources():
             if ds.name == name:
                 return ds
@@ -37,22 +41,32 @@ class ApiClient:
         res_json = res.json()
         return res_json['client_config']['version']
 
-    def get_query_result(self, query_result_id: int):
+    def get_query_result(self, query_result_id: int) -> QueryResultResponse:
         res = self._get(f'/api/query_results/{query_result_id}')
-        return res.json()
+        return QueryResultResponse.from_response(res.json()['query_result'])
 
-    def execute_query(self, query: str, data_source_id: int):
-        res = self._post('/api/query_results', json={'query': f'{query}', 'data_source_id': data_source_id})
+    def execute_query(
+            self, query: str, data_source_id: int, max_age: int = -1, timeout=10*60
+    ) -> QueryResultResponse:
+        res = self._post(
+            '/api/query_results',
+            json={
+                'query': f'{query}',
+                'data_source_id': data_source_id,
+                'max_age': max_age,
+            }
+        )
         res_json = res.json()
-        # 結果がある場合
+        # has result
         if 'query_result' in res_json:
-            return res_json
+            return QueryResultResponse.from_response(res_json['query_result'])
 
-        # 結果がない場合はJOB完了を待つしかない
+        # no result, wait execution.
         job_id = res_json['job']['id']
-        return self._wait_job(job_id)
+        return self._wait_job(job_id, timeout)
 
-    def _wait_job(self, job_id: str):
+    def _wait_job(self, job_id: str, timeout: int):
+        retry_counter = 0
         while True:
             res = self._get(f'/api/jobs/{job_id}')
             res_json = res.json()
@@ -67,16 +81,19 @@ class ApiClient:
                 error_msg = res_json['job']['error']
                 raise QueryRuntimeError(error_msg)
 
-            time.sleep(1)
+            retry_counter += 1
+            if retry_counter > timeout:
+                raise QueryTimeoutError(f'Wait Query Complete. but not completed[{timeout}].')
+            time.sleep(0.1)
 
     def _get(self, path, **kwargs):
-        return self._request("GET", path, **kwargs)
+        return self._request('GET', path, **kwargs)
 
     def _post(self, path, **kwargs):
-        return self._request("POST", path, **kwargs)
+        return self._request('POST', path, **kwargs)
 
     def _request(self, method, path, **kwargs):
-        url = "{}/{}".format(self.redash_url, path)
+        url = '{}/{}'.format(self.redash_url, path)
         response = self.session.request(method, url, **kwargs)
         response.raise_for_status()
         return response

@@ -4,8 +4,9 @@ import dataclasses
 
 
 @dataclasses.dataclass(frozen=True)
-class DataSourceDTO:
+class DataSourceResponse:
     """
+    response for datasources api
     {
         'name': 'metadata',
         'pause_reason': None,
@@ -27,6 +28,71 @@ class DataSourceDTO:
     @classmethod
     def from_response(cls, response: dict):
         return cls(**response)
+
+
+@dataclasses.dataclass(frozen=True)
+class QueryResultColumn:
+    friendly_name: str
+    type: str
+    name: str
+
+
+@dataclasses.dataclass(frozen=True)
+class QueryResultData:
+    rows: List[dict]
+    columns: List[QueryResultColumn]
+
+    @classmethod
+    def from_response(cls, data_response):
+        return cls(
+            rows=data_response['rows'],
+            columns=[
+                QueryResultColumn(**c)
+                for c in data_response['columns']
+            ]
+        )
+
+
+@dataclasses.dataclass(frozen=True)
+class QueryResultResponse:
+    """
+    response for query_result api
+    {
+        'retrieved_at': '2021-10-22T16:25:33.186Z',
+        'query_hash': 'd7d1d45bcb946547b382bb0e7853c185',
+        'query': 'select 1;',
+        'runtime': 0.00282192230224609,
+        'data': {
+            'rows': [
+                {'1': 1}
+            ],
+            'columns': [
+                {'friendly_name': '1', 'type': 'integer', 'name': '1'}
+            ]
+        },
+        'id': 33,
+        'data_source_id': 1
+    }
+    """
+    id: int
+    data_source_id: int
+    retrieved_at: str
+    query_hash: str
+    query: str
+    runtime: float
+    data: QueryResultData
+
+    @classmethod
+    def from_response(cls, response):
+        return cls(
+            id=response['id'],
+            data_source_id=response['data_source_id'],
+            retrieved_at=response['retrieved_at'],
+            query_hash=response['query_hash'],
+            query=response['data_source_id'],
+            runtime=response['runtime'],
+            data=QueryResultData.from_response(response['data']),
+        )
 
 
 @dataclasses.dataclass(frozen=True)

@@ -1,7 +1,6 @@
 import argparse
 import os
 import re
-import readline
 import sys
 from textwrap import dedent
 from os.path import expanduser
@@ -11,9 +10,13 @@ from prompt_toolkit.history import FileHistory
 
 import redasql.utils as utils
 from redasql.api_client import ApiClient
-from redasql.dto import DataSourceDTO
+from redasql.dto import DataSourceResponse
 from redasql.exceptions import RedasqlException
-from redasql.metacommand_executor import ConnectCommandExecutor, DescribeCommandExecutor, ChangeFormatterCommandExecutor
+from redasql.metacommand_executor import (
+    ConnectCommandExecutor,
+    DescribeCommandExecutor,
+    ChangeFormatterCommandExecutor
+)
 from redasql.result_formatter import table_formatter, pivoted_formatter
 from prompt_toolkit import prompt
 
@@ -33,7 +36,7 @@ class MainCommand:
             api_key=self.api_key
         )
         self.pivoted = False
-        self.data_source: Optional[DataSourceDTO] = None
+        self.data_source: Optional[DataSourceResponse] = None
         if data_source_name:
             executor = ConnectCommandExecutor(self.client, None, False)
             meta_command_return_list = executor.exec(data_source_name=data_source_name)
@@ -50,10 +53,11 @@ class MainCommand:
     def get_queries(self):
         return self.client.get_queries()
 
-    def execute_query(self, query: str, data_source_id: int):
+    def _execute_query(self, query: str, data_source_id: int):
         return self.client.execute_query(
             query=query,
             data_source_id=data_source_id,
+            max_age=0,
         )
 
     def loop(self):
@@ -76,32 +80,39 @@ class MainCommand:
         if not self.input_buffer and utils.is_empty(answer):
             return
         self.input_buffer.append(answer)
-
         if utils.is_meta_command(answer):
-            command, *args = re.split(r'\s+', answer.strip())
-            executors = {
-                r'\d': DescribeCommandExecutor,
-                r'\c': ConnectCommandExecutor,
-                r'\x': ChangeFormatterCommandExecutor,
-            }
-            executor = executors.get(command)
-            if not executor:
-                return
-            e = executor(self.client, self.data_source, self.pivoted)
-            meta_command_return_list = e.exec(*args)
-            if meta_command_return_list:
-                meta_command_return_list.apply(self)
+            self.execute_meta_command_handler(answer)
+            self.input_buffer = []
             return
 
         if utils.is_sql_end(answer):
-            query = '\n'.join(self.input_buffer)
+            self.execute_query_handler()
             self.input_buffer = []
-            result = self.execute_query(
-                query=query,
-                data_source_id=self.data_source.id
-            )
-            formatted_string = self._get_formatter()(result)
-            print(formatted_string)
+            return
+
+    def execute_query_handler(self):
+        query = '\n'.join(self.input_buffer)
+        result = self._execute_query(
+            query=query,
+            data_source_id=self.data_source.id
+        )
+        formatted_string = self._get_formatter()(result)
+        print(formatted_string)
+
+    def execute_meta_command_handler(self, input_string):
+        command, *args = re.split(r'\s+', input_string.strip())
+        executors = {
+            r'\d': DescribeCommandExecutor,
+            r'\c': ConnectCommandExecutor,
+            r'\x': ChangeFormatterCommandExecutor,
+        }
+        executor = executors.get(command)
+        if not executor:
+            return
+        e = executor(self.client, self.data_source, self.pivoted)
+        meta_command_return_list = e.exec(*args)
+        if meta_command_return_list:
+            meta_command_return_list.apply(self)
 
     def _get_prompt(self):
         data_source_name = '(No DataSource)'
