@@ -10,6 +10,7 @@ from typing import Optional
 from prompt_toolkit.history import FileHistory
 
 from redasql.api_client import ApiClient
+from redasql.dto import DataSourceDTO
 from redasql.exceptions import RedasqlException
 from redasql.metacommand_executor import ConnectCommandExecutor, DescribeCommandExecutor, ChangeFormatterCommandExecutor
 from redasql.result_formatter import table_formatter, pivoted_formatter
@@ -22,7 +23,7 @@ class MainCommand:
         self,
         endpoint: str,
         api_key: str,
-        data_source: Optional[str],
+        data_source_name: Optional[str],
     ):
         self.endpoint = endpoint
         self.api_key = api_key
@@ -31,11 +32,10 @@ class MainCommand:
             api_key=self.api_key
         )
         self.pivoted = False
-        # TODO かたていぎ
-        self.data_source = None
-        if data_source:
+        self.data_source: Optional[DataSourceDTO] = None
+        if data_source_name:
             executor = ConnectCommandExecutor(self.client, None, False)
-            results = executor.exec(data_source_name=data_source)
+            results = executor.exec(data_source_name=data_source_name)
             for result in results:
                 setattr(self, result.attr_name, result.value)
 
@@ -62,8 +62,7 @@ class MainCommand:
             except RedasqlException as e:
                 print(e)
             except KeyboardInterrupt:
-                # ctrl + c では終了させない
-                # TODO: SQL> SQL> SQL> ってなるのを直したい
+                print('Cancel')
                 self.buffer = []
             except EOFError:
                 # ctrl + d で終了させる
@@ -90,6 +89,8 @@ class MainCommand:
                 setattr(self, result.attr_name, result.value)
 
             return
+        if answer == '':
+            return
 
         self.buffer.append(answer)
         if answer.strip().endswith(';'):
@@ -97,15 +98,17 @@ class MainCommand:
             self.buffer = []
             result = self.execute_query(
                 query=query,
-                data_source_id=self.data_source['id']
+                data_source_id=self.data_source.id
             )
             formatted_string = self._get_formatter()(result)
             print(formatted_string)
 
     def _get_prompt(self):
+        data_source_name = '(No DataSource)'
         if self.data_source:
-            return f'{self.data_source["name"]}=# '
-        return '(No DataSource)=# '
+            data_source_name = f'{self.data_source.name}'
+        suffix = '-' if self.buffer else '='
+        return f'{data_source_name}{suffix}# '
 
     def _get_formatter(self):
         if self.pivoted:
@@ -125,10 +128,9 @@ def main(data_source: str):
     command = MainCommand(
         endpoint=os.environ['REDASH_ENDPOINT_URL'],
         api_key=os.environ['REDASH_APIKEY'],
-        data_source=data_source,
+        data_source_name=data_source,
     )
     print(f'server version: {command.get_version()}')
-    # print(command.execute_query())
     command.loop()
 
 

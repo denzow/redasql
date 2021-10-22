@@ -1,7 +1,6 @@
 import dataclasses
 from typing import List
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 
 from redasql.api_client import ApiClient
 
@@ -23,8 +22,6 @@ class MetaCommandBase(ABC):
         pass
 
 
-
-
 class DescribeCommandExecutor(MetaCommandBase):
 
     def exec(self, schema_name, *args, **kwargs):
@@ -42,13 +39,14 @@ class ConnectCommandExecutor(MetaCommandBase):
     def exec(self, data_source_name: str=None, *args, **kwargs):
         if not data_source_name:
             for ds in self.client.get_data_sources():
-                print(ds['name'])
+                print(f'{ds.name}:{ds.type}')
             return []
         data_source = self.client.get_data_source_by_name(data_source_name)
         return [MetaCommandReturn(
           value=data_source,
           attr_name='data_source'
         )]
+
 
 class ChangeFormatterCommandExecutor(MetaCommandBase):
     def exec(self, *args, **kwargs) -> List[MetaCommandReturn]:
