@@ -1,3 +1,4 @@
+import sys
 from typing import List, Optional
 from abc import ABC, abstractmethod
 
@@ -12,12 +13,32 @@ class MetaCommandBase(ABC):
         self.data_source = data_source
         self.pivoted = pivoted
 
+    @staticmethod
     @abstractmethod
-    def exec(*args, **kwargs) -> Optional[MetaCommandReturnList]:
+    def help_text():
+        raise NotImplemented()
+
+    @abstractmethod
+    def exec(self, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         pass
 
 
+class HelpCommandExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return 'HELP META COMMANDS.'
+
+    def exec(self, *args, **kwargs):
+        for command, executor in EXECUTORS.items():
+            print(f'{command}: {executor.help_text()}')
+
+
 class DescribeCommandExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return 'DESCRIBE TABLE'
 
     def exec(self, schema_name, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         result = self.client.get_schemas(self.data_source['id'])
@@ -30,6 +51,10 @@ class DescribeCommandExecutor(MetaCommandBase):
 
 
 class ConnectCommandExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return 'SELECT DATASOURCE.'
 
     def exec(self, data_source_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         if not data_source_name:
@@ -46,6 +71,11 @@ class ConnectCommandExecutor(MetaCommandBase):
 
 
 class ChangeFormatterCommandExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return 'QUERY RESULT TOGGLE PIVOT.'
+
     def exec(self, *args, **kwargs) -> MetaCommandReturnList:
         new_pivoted = not self.pivoted
         print(f'set pivoted [{new_pivoted}]')
@@ -57,14 +87,30 @@ class ChangeFormatterCommandExecutor(MetaCommandBase):
         )
 
 
+class QuitCommandExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return 'EXIT.'
+
+    def exec(self, *args, **kwargs):
+        print('Sayonara!')
+        sys.exit(0)
+
+
 def meta_command_factory(command: str):
-    executors = {
-        r'\d': DescribeCommandExecutor,
-        r'\c': ConnectCommandExecutor,
-        r'\x': ChangeFormatterCommandExecutor,
-    }
-    executor = executors.get(command)
+
+    executor = EXECUTORS.get(command)
     if not executor:
         raise InvalidMetaCommand(f'{command} is not a valid meta command.')
 
     return executor
+
+
+EXECUTORS = {
+    r'\?': HelpCommandExecutor,
+    r'\d': DescribeCommandExecutor,
+    r'\c': ConnectCommandExecutor,
+    r'\x': ChangeFormatterCommandExecutor,
+    r'\q': QuitCommandExecutor,
+}
