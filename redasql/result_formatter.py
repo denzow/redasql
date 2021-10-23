@@ -7,7 +7,6 @@ def table_formatter(result: QueryResultResponse) -> str:
     """
     return table formatted result
     """
-
     data = result.data
     column_name_list = [c.name for c in data.columns]
     row_data_list = [r.values() for r in data.rows]

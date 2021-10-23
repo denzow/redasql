@@ -107,12 +107,22 @@ class MainCommand:
 
     def execute_query_handler(self):
         query = '\n'.join(self.input_buffer)
-        result = self._execute_query(
+        query_result = self._execute_query(
             query=query,
             data_source_id=self.data_source.id
         )
-        formatted_string = self._get_formatter()(result)
+        if query_result.rows_count == 0:
+            print(dedent(f"""
+            no rows returned.
+            {query_result.runtime_for_display}
+            """))
+            return
+        formatted_string = self._get_formatter()(query_result)
         print(formatted_string)
+        print(dedent(f"""
+        {query_result.rows_count_for_display}
+        {query_result.runtime_for_display}
+        """))
 
     def execute_meta_command_handler(self, input_string):
         command, *args = re.split(r'\s+', input_string.strip())

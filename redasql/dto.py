@@ -1,6 +1,7 @@
+import datetime
+import dataclasses
 from typing import Optional, Any, List
 
-import dataclasses
 
 
 @dataclasses.dataclass(frozen=True)
@@ -86,18 +87,34 @@ class QueryResultResponse:
     """
     id: int
     data_source_id: int
-    retrieved_at: str
+    retrieved_at: datetime
     query_hash: str
     query: str
     runtime: float
     data: QueryResultData
+
+    @property
+    def rows_count(self):
+        return len(self.data.rows)
+
+    @property
+    def rows_count_for_display(self):
+        if self.rows_count > 1:
+            return f'{self.rows_count} rows'
+        return f'{self.rows_count} row'
+
+    @property
+    def runtime_for_display(self):
+        return f'Time: {round(self.runtime, 4)}s'
 
     @classmethod
     def from_response(cls, response):
         return cls(
             id=response['id'],
             data_source_id=response['data_source_id'],
-            retrieved_at=response['retrieved_at'],
+            retrieved_at=datetime.datetime.fromisoformat(
+                response['retrieved_at'].replace('Z', '+00:00')
+            ),
             query_hash=response['query_hash'],
             query=response['data_source_id'],
             runtime=response['runtime'],
