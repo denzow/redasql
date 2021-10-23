@@ -1,6 +1,12 @@
+import enum
 import datetime
 import dataclasses
 from typing import Optional, Any, List
+
+
+class OperatorType(enum.Enum):
+    REPLACE = 'replace'
+    APPEND = 'append'
 
 
 @dataclasses.dataclass(frozen=True)
@@ -123,9 +129,34 @@ class QueryResultResponse:
 
 
 @dataclasses.dataclass(frozen=True)
+class SchemaResponse:
+    """
+    response for query_result api
+    {
+        'schema': [
+            {
+                'name': 'city',
+                'columns': ['ID', 'Name', 'CountryCode', 'District', 'Population']
+            },
+        ]
+    }
+    """
+    name: str
+    columns: List[str]
+
+    @classmethod
+    def from_response(cls, response):
+        return cls(
+            name=response['name'],
+            columns=response['columns'],
+        )
+
+
+@dataclasses.dataclass(frozen=True)
 class NewAttribute:
     attr_name: str
     value: Any
+    operator: OperatorType = OperatorType.REPLACE
 
 
 @dataclasses.dataclass(frozen=True)
@@ -137,4 +168,23 @@ class MetaCommandReturnList:
 
     def apply(self, target: Any):
         for attribute in self.new_attrs:
-            setattr(target, attribute.attr_name, attribute.value)
+            if attribute.operator is OperatorType.REPLACE:
+                setattr(target, attribute.attr_name, attribute.value)
+            elif attribute.operator is OperatorType.APPEND:
+                current_attr = getattr(target, attribute.attr_name, None)
+                if not current_attr:
+                    if isinstance(attribute.value, list):
+                        current_attr = []
+                    elif isinstance(attribute.value, dict):
+                        current_attr = {}
+                new_attr: Any = None
+                if isinstance(attribute.value, list):
+                    new_attr = current_attr + attribute.value
+                elif isinstance(attribute.value, dict):
+                    new_attr = {**current_attr, **attribute.value}
+                else:
+                    new_attr = current_attr + attribute.value
+                setattr(target, attribute.attr_name, new_attr)
+
+            else:
+                print(f'{attribute.operator} is unknown.')

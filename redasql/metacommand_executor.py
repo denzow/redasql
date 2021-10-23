@@ -1,17 +1,19 @@
 import sys
+import itertools
 from typing import List, Optional
 from abc import ABC, abstractmethod
 
 from redasql.api_client import ApiClient
-from redasql.dto import MetaCommandReturnList, NewAttribute
+from redasql.constants import SQL_KEYWORDS, SQL_KEYWORDS_META_DICT
+from redasql.dto import MetaCommandReturnList, NewAttribute, OperatorType, DataSourceResponse
 from redasql.exceptions import InvalidMetaCommand
 
 
 class MetaCommandBase(ABC):
-    def __init__(self, client: ApiClient, data_source, pivoted: bool):
+    def __init__(self, client: ApiClient, data_source: DataSourceResponse, pivoted: bool):
         self.client = client
         self.data_source = data_source
-        self.pivoted = pivoted
+        self.pivoted: bool = pivoted
 
     @staticmethod
     @abstractmethod
@@ -41,10 +43,10 @@ class DescribeCommandExecutor(MetaCommandBase):
         return 'DESCRIBE TABLE'
 
     def exec(self, schema_name, *args, **kwargs) -> Optional[MetaCommandReturnList]:
-        result = self.client.get_schemas(self.data_source['id'])
-        for schema in result['schema']:
-            if schema['name'].lower() == schema_name.lower():
-                for col in schema['columns']:
+        schemas = self.client.get_schema(self.data_source.id)
+        for schema in schemas:
+            if schema.name.lower() == schema_name.lower():
+                for col in schema.columns:
                     print(col)
                 break
         return
@@ -58,15 +60,52 @@ class ConnectCommandExecutor(MetaCommandBase):
 
     def exec(self, data_source_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         if not data_source_name:
-            for ds in self.client.get_data_sources():
+            data_sources = self.client.get_data_sources()
+            for ds in data_sources:
                 print(f'{ds.name}:{ds.type}')
-            return
+            complete_sources = NewAttribute(
+                attr_name='complete_sources',
+                value=[d.name for d in data_sources],
+                operator=OperatorType.APPEND,
+            )
+            complete_meta_dict = NewAttribute(
+                attr_name='complete_meta_dict',
+                value={d.name: 'datasource' for d in data_sources},
+                operator=OperatorType.APPEND,
+            )
+
+            return MetaCommandReturnList(
+                new_attrs=[complete_sources, complete_meta_dict]
+            )
         data_source = self.client.get_data_source_by_name(data_source_name)
+        schemas = self.client.get_schema(data_source_id=data_source.id)
+        new_data_source = NewAttribute(
+            value=data_source,
+            attr_name='data_source'
+        )
+        schema_names = [schema.name for schema in schemas]
+        column_names = list(
+            itertools.chain.from_iterable([schema.columns for schema in schemas])
+        )
+        meta_dict = {s: 'table' for s in schema_names}
+        meta_dict.update(
+            {c: 'column' for c in column_names}
+        )
+        meta_dict.update(SQL_KEYWORDS_META_DICT)
+        new_complete_sources = NewAttribute(
+            attr_name='complete_sources',
+            value=schema_names + column_names + SQL_KEYWORDS,
+        )
+        new_complete_meta_dict = NewAttribute(
+            attr_name='complete_meta_dict',
+            value=meta_dict,
+        )
         return MetaCommandReturnList(
-            new_attrs=[NewAttribute(
-                value=data_source,
-                attr_name='data_source'
-            )]
+            new_attrs=[
+                new_data_source,
+                new_complete_sources,
+                new_complete_meta_dict,
+            ]
         )
 
 

@@ -8,6 +8,7 @@ from typing import Optional
 
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit.completion import FuzzyWordCompleter
 
 import redasql.utils as utils
 from redasql.api_client import ApiClient
@@ -44,16 +45,17 @@ class MainCommand:
             proxy=self.proxy
         )
         self.pivoted = False
-        self.data_source: Optional[DataSourceResponse] = None
-        if data_source_name:
-            executor = ConnectCommandExecutor(self.client, None, False)
-            meta_command_return_list = executor.exec(data_source_name=data_source_name)
-            if meta_command_return_list:
-                meta_command_return_list.apply(self)
-
         self.input_buffer = []
-
+        self.complete_sources = []
+        self.complete_meta_dict = {}
         self.history = FileHistory(f'{expanduser("~")}/.redasql.hist')
+        self.data_source: Optional[DataSourceResponse] = None
+        if data_source_name is None:
+            data_source_list = self.client.get_data_sources()
+            self.complete_sources = [d.name for d in data_source_list]
+            self.complete_meta_dict = {d.name: 'datasource' for d in data_source_list}
+        else:
+            self.execute_meta_command_handler(fr'\c {data_source_name}')
 
     def splash(self):
         print(dedent(f"""
@@ -73,16 +75,6 @@ class MainCommand:
     def get_version(self):
         return self.client.get_version()
 
-    def get_queries(self):
-        return self.client.get_queries()
-
-    def _execute_query(self, query: str, data_source_id: int):
-        return self.client.execute_query(
-            query=query,
-            data_source_id=data_source_id,
-            max_age=0,
-        )
-
     def loop(self):
         while True:
             try:
@@ -97,7 +89,11 @@ class MainCommand:
                 sys.exit(0)
 
     def main(self):
-        answer = prompt(self._get_prompt(), history=self.history)
+        answer = prompt(
+            self._get_prompt(),
+            history=self.history,
+            completer=self._get_completer(),
+        )
 
         # ignore empty line. if no buffer.
         if not self.input_buffer and utils.is_empty(answer):
@@ -140,6 +136,13 @@ class MainCommand:
         if meta_command_return_list:
             meta_command_return_list.apply(self)
 
+    def _execute_query(self, query: str, data_source_id: int):
+        return self.client.execute_query(
+            query=query,
+            data_source_id=data_source_id,
+            max_age=0,
+        )
+
     def _get_prompt(self):
         data_source_name = '(No DataSource)'
         if self.data_source:
@@ -152,6 +155,12 @@ class MainCommand:
             return pivoted_formatter
         return table_formatter
 
+    def _get_completer(self):
+        self.complete_sources = list(set(self.complete_sources))
+        return FuzzyWordCompleter(
+            words=self.complete_sources,
+            meta_dict=self.complete_meta_dict
+        )
 
 def main():
     args = init()

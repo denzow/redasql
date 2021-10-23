@@ -2,7 +2,7 @@ import requests
 import time
 from typing import Optional, List
 
-from redasql.dto import DataSourceResponse, QueryResultResponse
+from redasql.dto import DataSourceResponse, QueryResultResponse, SchemaResponse
 from redasql.exceptions import (
     QueryRuntimeError,
     DataSourceNotFoundError,
@@ -33,9 +33,9 @@ class ApiClient:
                 return ds
         raise DataSourceNotFoundError(f'data source name [{name}] is not found.')
 
-    def get_schemas(self, data_source_id: int):
+    def get_schema(self, data_source_id: int) -> List[SchemaResponse]:
         res = self._get(f'api/data_sources/{data_source_id}/schema')
-        return res.json()
+        return [SchemaResponse.from_response(s) for s in res.json()['schema']]
 
     def get_queries(self):
         res = self._get('api/queries')
