@@ -3,12 +3,12 @@ import dataclasses
 from typing import Optional, Any, List
 
 
-
 @dataclasses.dataclass(frozen=True)
 class CommandArgs:
     api_key: Optional[str]
     endpoint: Optional[str]
     data_source_name: Optional[str]
+    proxy: Optional[str]
 
     def to_dict(self):
         return dataclasses.asdict(self)
@@ -100,8 +100,8 @@ class QueryResultResponse:
     @property
     def rows_count_for_display(self):
         if self.rows_count > 1:
-            return f'{self.rows_count} rows'
-        return f'{self.rows_count} row'
+            return f'{self.rows_count} rows returned.'
+        return f'{self.rows_count} row returned.'
 
     @property
     def runtime_for_display(self):

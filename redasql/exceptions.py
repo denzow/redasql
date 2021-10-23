@@ -16,3 +16,7 @@ class DataSourceNotFoundError(RedasqlException):
 
 class InvalidMetaCommand(RedasqlException):
     """ invalid meta command"""
+
+
+class InsufficientParametersError(RedasqlException):
+    """ api key and endpoint must be set """

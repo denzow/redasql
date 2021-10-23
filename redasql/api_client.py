@@ -12,10 +12,15 @@ from redasql.exceptions import (
 
 class ApiClient:
 
-    def __init__(self, redash_url: str, api_key: str):
+    def __init__(self, redash_url: str, api_key: str, proxy: str = None):
         self.redash_url = redash_url.rstrip('/')
         self.session = requests.Session()
         self.session.headers.update({'Authorization': f'Key {api_key}'})
+        self.proxy = None
+        if proxy:
+            self.proxy = proxy
+        if self.proxy:
+            self.session.proxies.update({'http': self.proxy, 'https': self.proxy})
 
     def get_data_sources(self) -> List[DataSourceResponse]:
         res = self._get('api/data_sources')

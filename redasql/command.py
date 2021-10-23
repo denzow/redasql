@@ -12,7 +12,7 @@ from prompt_toolkit.history import FileHistory
 import redasql.utils as utils
 from redasql.api_client import ApiClient
 from redasql.dto import CommandArgs, DataSourceResponse
-from redasql.exceptions import RedasqlException
+from redasql.exceptions import RedasqlException, InsufficientParametersError
 from redasql.metacommand_executor import (
     ConnectCommandExecutor,
     meta_command_factory,
@@ -27,13 +27,21 @@ class MainCommand:
         self,
         endpoint: str,
         api_key: str,
+        proxy: str,
         data_source_name: Optional[str],
     ):
-        self.endpoint = endpoint if endpoint else os.environ['REDASQL_REDASH_ENDPOINT']
-        self.api_key = api_key if api_key else os.environ['REDASQL_REDASH_APIKEY']
+        self.endpoint = endpoint if endpoint else os.environ.get('REDASQL_REDASH_ENDPOINT')
+        self.api_key = api_key if api_key else os.environ.get('REDASQL_REDASH_APIKEY')
+        if self.endpoint is None or self.api_key is None:
+            raise InsufficientParametersError("""
+            "endpoint" and "api key" are absolutely necessary. use args or environment
+            """)
+
+        self.proxy = proxy if proxy else os.environ.get('REDASQL_HTTP_PROXY')
         self.client = ApiClient(
             redash_url=self.endpoint,
-            api_key=self.api_key
+            api_key=self.api_key,
+            proxy=self.proxy
         )
         self.pivoted = False
         self.data_source: Optional[DataSourceResponse] = None
@@ -180,11 +188,21 @@ def init():
         """),
         default=None
     )
+    parser.add_argument(
+        '-p',
+        '--proxy',
+        help=dedent("""
+        if you need proxy connection, set them
+        i.e) http://user:pass@proxy-host:proxy-port'
+        """),
+        default=None,
+    )
     args = parser.parse_args()
     return CommandArgs(
         api_key=args.api_key,
         endpoint=args.server_host,
         data_source_name=args.data_source,
+        proxy=args.proxy,
     )
 
 
