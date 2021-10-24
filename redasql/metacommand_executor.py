@@ -13,7 +13,7 @@ class MetaCommandBase(ABC):
     def __init__(self, client: ApiClient, data_source: DataSourceResponse, pivoted: bool):
         self.client = client
         self.data_source = data_source
-        self.pivoted: bool = pivoted
+        self.pivoted = pivoted
 
     @staticmethod
     @abstractmethod
