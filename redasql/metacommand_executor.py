@@ -1,6 +1,6 @@
 import sys
 import itertools
-from typing import List, Optional
+from typing import Optional
 from abc import ABC, abstractmethod
 
 from redasql.api_client import ApiClient
@@ -42,12 +42,20 @@ class DescribeCommandExecutor(MetaCommandBase):
     def help_text():
         return 'DESCRIBE TABLE'
 
-    def exec(self, schema_name, *args, **kwargs) -> Optional[MetaCommandReturnList]:
+    def exec(self, schema_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         schemas = self.client.get_schema(self.data_source.id)
+        # show all tables
+        if not schema_name:
+            print(f'## schemas in {self.data_source.name}')
+            for schema in schemas:
+                print(f'- {schema.name}')
+            return
+
         for schema in schemas:
             if schema.name.lower() == schema_name.lower():
+                print(f'## {schema.name}')
                 for col in schema.columns:
-                    print(col)
+                    print(f'- {col}')
                 break
         return
 

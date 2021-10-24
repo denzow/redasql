@@ -14,10 +14,7 @@ import redasql.utils as utils
 from redasql.api_client import ApiClient
 from redasql.dto import CommandArgs, DataSourceResponse
 from redasql.exceptions import RedasqlException, InsufficientParametersError
-from redasql.metacommand_executor import (
-    ConnectCommandExecutor,
-    meta_command_factory,
-)
+from redasql.metacommand_executor import meta_command_factory
 from redasql.result_formatter import table_formatter, pivoted_formatter
 from redasql.__version__ import __VERSION__
 
