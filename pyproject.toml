@@ -1,13 +1,31 @@
 [tool.poetry]
 name = "redasql"
-version = "0.1.0"
+version = "0.0.9.3"
 description = ""
 authors = ["denzow <denzow@gmail.com>"]
-
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/denzow/redasql"
+repository = "https://github.com/denzow/redasql"
+keywords = ["redash", "sql"]
+classifiers = [
+    "Environment :: Console",
+    "Framework :: Flake8",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Documentation",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+]
+include = [
+    "LICENSE",
+]
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 requests = "^2.26.0"
 prettytable = "^2.2.0"
 prompt-toolkit = "^3.0.20"
 
 [tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+redasql = 'redasql.command:main'

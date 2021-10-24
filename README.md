@@ -1,4 +1,8 @@
 # RedaSQL
+![redasql](https://user-images.githubusercontent.com/4572217/138585742-dc82c105-8f43-46f4-a611-27fe49577a5b.png)
+
+
+RedaSQL is querying tool for redash.
 I like `psql`(PostgreSQL CLI). so redasql resemble psql in some respects.
 
 ## Install

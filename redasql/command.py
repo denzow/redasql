@@ -2,6 +2,8 @@ import argparse
 import os
 import re
 import sys
+import pkg_resources
+
 from textwrap import dedent
 from os.path import expanduser
 from typing import Optional
@@ -16,7 +18,8 @@ from redasql.dto import CommandArgs, DataSourceResponse
 from redasql.exceptions import RedasqlException, InsufficientParametersError
 from redasql.metacommand_executor import meta_command_factory
 from redasql.result_formatter import table_formatter, pivoted_formatter
-from redasql.__version__ import __VERSION__
+
+VERSION = pkg_resources.get_distribution('redasql').version
 
 
 class MainCommand:
@@ -31,9 +34,9 @@ class MainCommand:
         self.endpoint = endpoint if endpoint else os.environ.get('REDASQL_REDASH_ENDPOINT')
         self.api_key = api_key if api_key else os.environ.get('REDASQL_REDASH_APIKEY')
         if self.endpoint is None or self.api_key is None:
-            raise InsufficientParametersError("""
+            raise InsufficientParametersError(dedent("""
             "endpoint" and "api key" are absolutely necessary. use args or environment
-            """)
+            """))
 
         self.proxy = proxy if proxy else os.environ.get('REDASQL_HTTP_PROXY')
         self.client = ApiClient(
@@ -66,7 +69,7 @@ class MainCommand:
 
         SUCCESS CONNECT
         - server version {self.get_version()}
-        - client version {__VERSION__}
+        - client version {VERSION}
         """))
 
     def get_version(self):
@@ -158,6 +161,7 @@ class MainCommand:
             words=self.complete_sources,
             meta_dict=self.complete_meta_dict
         )
+
 
 def main():
     args = init()
