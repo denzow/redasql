@@ -10,11 +10,10 @@ repository = "https://github.com/denzow/redasql"
 keywords = ["redash", "sql"]
 classifiers = [
     "Environment :: Console",
-    "Framework :: Flake8",
-    "Operating System :: OS Independent",
-    "Topic :: Software Development :: Documentation",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: Software Development :: Quality Assurance",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
 ]
 include = [
     "LICENSE",
