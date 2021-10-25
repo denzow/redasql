@@ -9,12 +9,14 @@ def table_formatter(result: QueryResultResponse) -> str:
     """
     data = result.data
     column_name_list = [c.name for c in data.columns]
-    row_data_list = [r.values() for r in data.rows]
-    x = PrettyTable(
+    table = PrettyTable(
         field_names=column_name_list
     )
-    x.add_rows(row_data_list)
-    return x.get_string()
+    for row in data.rows:
+        row_data = [row[col] for col in column_name_list]
+        table.add_row(row_data)
+
+    return table.get_string()
 
 
 def pivoted_formatter(result: QueryResultResponse) -> str:
