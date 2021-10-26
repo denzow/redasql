@@ -1,8 +1,12 @@
 import sys
 import itertools
 import fnmatch
+import re
+
 from typing import Optional
 from abc import ABC, abstractmethod
+
+from prompt_toolkit import prompt
 
 from redasql.api_client import ApiClient
 from redasql.constants import SQL_KEYWORDS, SQL_KEYWORDS_META_DICT, OperatorType, FormatterType
@@ -168,6 +172,55 @@ class FormatterChangeExecutor(MetaCommandBase):
             )]
         )
 
+class LoadQueryExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return 'LOAD QUERY FROM REDASH.'
+
+    def exec(self, query_id: str, *args, **kwargs):
+        if not query_id.isdigit():
+            raise InvalidSettingError(f'[{query_id}] is invalid query_id.')
+        query_response = self.client.get_query_by_id(int(query_id))
+        query = query_response.query
+        for parameter in query_response.parameters:
+            answer = prompt(f'{parameter.name}? > ')
+            query = self._resplace_parameter(query, parameter.name, answer)
+        print(query)
+        # set buffer for query execution and add history
+        new_attrs = [
+            NewAttribute(
+                value=[query],
+                attr_name='input_buffer',
+                operator=OperatorType.REPLACE,
+            ),
+            NewAttribute(
+                value=query,
+                attr_name='history',
+                method_name='append_string',
+                operator=OperatorType.CALL,
+            ),
+        ]
+        # change datasource for query execution.
+        if query_response.data_source_id != self.data_source.id:
+            data_source = self.client.get_data_source_by_id(query_response.data_source_id)
+            print(f'[warn] datasource change to [{data_source.name}]')
+            new_attrs.append(
+                NewAttribute(
+                    value=data_source,
+                    attr_name='data_source',
+                    operator=OperatorType.REPLACE,
+                )
+            )
+
+        return MetaCommandReturnList(
+            new_attrs=new_attrs
+        )
+
+    @staticmethod
+    def _resplace_parameter(base_str: str, replace_keyword, replace_value):
+        return re.sub(f'{{{{ *{replace_keyword} *}}}}', replace_value, base_str)
+
 
 class QuitCommandExecutor(MetaCommandBase):
 
@@ -196,4 +249,5 @@ EXECUTORS = {
     r'\x': ChangePivotCommandExecutor,
     r'\q': QuitCommandExecutor,
     r'\f': FormatterChangeExecutor,
+    r'\l': LoadQueryExecutor,
 }

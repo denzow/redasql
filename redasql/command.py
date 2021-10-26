@@ -32,6 +32,7 @@ class MainCommand:
         api_key: str,
         proxy: str,
         data_source_name: Optional[str],
+        debug: bool,
     ):
         self.endpoint = endpoint if endpoint else os.environ.get('REDASQL_REDASH_ENDPOINT')
         self.api_key = api_key if api_key else os.environ.get('REDASQL_REDASH_APIKEY')
@@ -41,6 +42,7 @@ class MainCommand:
             """))
 
         self.proxy = proxy if proxy else os.environ.get('REDASQL_HTTP_PROXY')
+        self.debug = debug
         self.client = ApiClient(
             redash_url=self.endpoint,
             api_key=self.api_key,
@@ -83,6 +85,9 @@ class MainCommand:
             try:
                 self.main()
             except RedasqlException as e:
+                if self.debug:
+                    import traceback
+                    print(traceback.format_exc())
                 print(e)
                 self.input_buffer = []
             except KeyboardInterrupt:
@@ -98,25 +103,28 @@ class MainCommand:
             history=self.history,
             completer=self._get_completer(),
         )
-
-        # ignore empty line. if no buffer.
-        if not self.input_buffer and utils.is_empty(answer):
+        if self.debug:
+            print('buffer', self.input_buffer)
+        # ignore empty line.
+        if utils.is_empty(answer):
             return
+
         self.input_buffer.append(answer)
         if utils.is_meta_command(answer):
-            self.execute_meta_command_handler(answer)
             self.input_buffer = []
+            self.execute_meta_command_handler(answer)
             return
 
         if utils.is_sql_end(answer):
-            self.execute_query_handler()
+            query = '\n'.join(self.input_buffer)
             self.input_buffer = []
+            self.execute_query_handler(query)
             return
 
-    def execute_query_handler(self):
+    def execute_query_handler(self, query: str):
         if not self.data_source:
             raise NoDataSourceError('Plz set datasource.(use \\c <data source name>)')
-        query = '\n'.join(self.input_buffer)
+
         query_result = self._execute_query(
             query=query,
             data_source_id=self.data_source.id
@@ -144,6 +152,8 @@ class MainCommand:
             meta_command_return_list.apply(self)
 
     def _execute_query(self, query: str, data_source_id: int):
+        if self.debug:
+            print('query', query)
         return self.client.execute_query(
             query=query,
             data_source_id=data_source_id,
@@ -209,12 +219,21 @@ def init():
         """),
         default=None,
     )
+    parser.add_argument(
+        '--debug',
+        help=dedent("""
+        debug mode on
+        """),
+        action='store_true',
+        default=False,
+    )
     args = parser.parse_args()
     return CommandArgs(
         api_key=args.api_key,
         endpoint=args.server_host,
         data_source_name=args.data_source,
         proxy=args.proxy,
+        debug=args.debug,
     )
 
 

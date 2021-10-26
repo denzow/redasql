@@ -4,6 +4,7 @@ import enum
 class OperatorType(enum.Enum):
     REPLACE = 'replace'
     APPEND = 'append'
+    CALL = 'call'
 
 
 class FormatterType(enum.Enum):

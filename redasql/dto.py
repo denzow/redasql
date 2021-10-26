@@ -11,6 +11,7 @@ class CommandArgs:
     endpoint: Optional[str]
     data_source_name: Optional[str]
     proxy: Optional[str]
+    debug: bool
 
     def to_dict(self):
         return dataclasses.asdict(self)
@@ -149,9 +150,50 @@ class SchemaResponse:
 
 
 @dataclasses.dataclass(frozen=True)
+class QueryParameterResponse:
+    name: str
+    title: str
+    global_: bool
+    value: Any
+    type: str
+    parent_query_id: int
+
+    @classmethod
+    def from_response(cls, response: dict):
+        return cls(
+            name=response['name'],
+            title=response['title'],
+            global_=response['global'],
+            value=response['value'],
+            type=response['type'],
+            parent_query_id=response['parentQueryId']
+        )
+
+
+
+@dataclasses.dataclass(frozen=True)
+class QueryResponse:
+    query: str
+    data_source_id: int
+    parameters: List[QueryParameterResponse]
+
+    @classmethod
+    def from_response(cls, response):
+        return cls(
+            query=response['query'],
+            data_source_id=response['data_source_id'],
+            parameters=[
+                QueryParameterResponse.from_response(p)
+                for p in response['options']['parameters']
+            ],
+        )
+
+
+@dataclasses.dataclass(frozen=True)
 class NewAttribute:
     attr_name: str
     value: Any
+    method_name: Optional[str] = None
     operator: OperatorType = OperatorType.REPLACE
 
 
@@ -181,6 +223,8 @@ class MetaCommandReturnList:
                 else:
                     new_attr = current_attr + attribute.value
                 setattr(target, attribute.attr_name, new_attr)
-
+            elif attribute.operator is OperatorType.CALL:
+                attr = getattr(target, attribute.attr_name)
+                getattr(attr, attribute.method_name)(attribute.value)
             else:
                 print(f'{attribute.operator} is unknown.')
