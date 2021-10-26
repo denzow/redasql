@@ -128,6 +128,7 @@ class MainCommand:
             """))
             return
         formatted_string = self.formatter(query_result, self.pivoted).format()
+        print('')
         print(formatted_string)
         print(dedent(f"""
         {query_result.rows_count_for_display}

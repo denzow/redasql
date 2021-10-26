@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from textwrap import dedent
 
-from tabulate import tabulate
+import tabulate
 
 from redasql.constants import FormatterType
 from redasql.dto import QueryResultResponse
+
+tabulate.PRESERVE_WHITESPACE = True
 
 
 class Formatter(ABC):
@@ -38,10 +40,10 @@ class TableFormatter(Formatter):
         row_for_tables = []
         for row in self.rows:
             row_for_tables.append([row[c] for c in self.column_name_list])
-        table = tabulate(
+        table = tabulate.tabulate(
             row_for_tables,
             headers=self.column_name_list,
-            tablefmt='pretty'
+            tablefmt='psql'
         )
         return table
 
@@ -62,7 +64,7 @@ class MarkdownFormatter(Formatter):
         row_for_tables = []
         for row in self.rows:
             row_for_tables.append([row[c] for c in self.column_name_list])
-        table = tabulate(
+        table = tabulate.tabulate(
             row_for_tables,
             headers=self.column_name_list,
             tablefmt='github'
@@ -75,7 +77,7 @@ class MarkdownFormatter(Formatter):
             for k, v in row.items():
                 row_for_tables.append([k, v])
 
-        table = tabulate(
+        table = tabulate.tabulate(
             row_for_tables,
             headers=['colum_name', 'value'],
             tablefmt='github'
