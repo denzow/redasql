@@ -21,8 +21,8 @@ include = [
 [tool.poetry.dependencies]
 python = "^3.7"
 requests = "^2.26.0"
-prettytable = "^2.2.0"
 prompt-toolkit = "^3.0.20"
+tabulate = "^0.8.9"
 
 [tool.poetry.dev-dependencies]
 

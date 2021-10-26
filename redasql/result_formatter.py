@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from prettytable import PrettyTable
+from tabulate import tabulate
 
 from redasql.constants import FormatterType
 from redasql.dto import QueryResultResponse
@@ -33,14 +33,15 @@ class TableFormatter(Formatter):
     formatter_type = FormatterType.TABLE
 
     def _format_result_to_row_base(self):
-        table = PrettyTable(
-            field_names=self.column_name_list
-        )
+        row_for_tables = []
         for row in self.rows:
-            row_data = [row[col] for col in self.column_name_list]
-            table.add_row(row_data)
-
-        return table.get_string()
+            row_for_tables.append([row[c] for c in self.column_name_list])
+        table = tabulate(
+            row_for_tables,
+            headers=self.column_name_list,
+            tablefmt='pretty'
+        )
+        return table
 
     def _format_result_to_column_base(self):
         result_string = ''
