@@ -137,7 +137,7 @@ class MainCommand:
     def execute_meta_command_handler(self, input_string):
         command, *args = re.split(r'\s+', input_string.strip())
         executor = meta_command_factory(command)
-        e = executor(self.client, self.data_source, self.pivoted)
+        e = executor(self.client, self.data_source, self.pivoted, self.formatter)
         meta_command_return_list = e.exec(*args)
         if meta_command_return_list:
             meta_command_return_list.apply(self)

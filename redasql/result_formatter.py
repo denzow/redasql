@@ -6,9 +6,12 @@ from redasql.dto import QueryResultResponse
 
 
 class Formatter(ABC):
+    formatter_type = None
+
     def __init__(self, result: QueryResultResponse, pivoted: bool):
         self.result = result
         self.pivoted = pivoted
+        self.query = result.query
         self.column_name_list = [c.name for c in self.result.data.columns]
         self.rows = self.result.data.rows
 
@@ -27,6 +30,7 @@ class Formatter(ABC):
 
 
 class TableFormatter(Formatter):
+    formatter_type = FormatterType.TABLE
 
     def _format_result_to_row_base(self):
         table = PrettyTable(

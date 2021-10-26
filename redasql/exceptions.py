@@ -18,6 +18,10 @@ class InvalidMetaCommand(RedasqlException):
     """ invalid meta command"""
 
 
+class InvalidSettingError(RedasqlException):
+    """ invalid setting requested. """
+
+
 class InsufficientParametersError(RedasqlException):
     """ api key and endpoint must be set """
 

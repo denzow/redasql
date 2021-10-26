@@ -5,16 +5,18 @@ from typing import Optional
 from abc import ABC, abstractmethod
 
 from redasql.api_client import ApiClient
-from redasql.constants import SQL_KEYWORDS, SQL_KEYWORDS_META_DICT, OperatorType
+from redasql.constants import SQL_KEYWORDS, SQL_KEYWORDS_META_DICT, OperatorType, FormatterType
 from redasql.dto import MetaCommandReturnList, NewAttribute, DataSourceResponse
-from redasql.exceptions import InvalidMetaCommand
+from redasql.exceptions import InvalidMetaCommand, InvalidSettingError
+from redasql.result_formatter import Formatter, formatter_factory
 
 
 class MetaCommandBase(ABC):
-    def __init__(self, client: ApiClient, data_source: DataSourceResponse, pivoted: bool):
+    def __init__(self, client: ApiClient, data_source: DataSourceResponse, pivoted: bool, formatter: Formatter):
         self.client = client
         self.data_source = data_source
         self.pivoted = pivoted
+        self.formatter = formatter
 
     @staticmethod
     @abstractmethod
@@ -124,7 +126,7 @@ class ConnectCommandExecutor(MetaCommandBase):
         )
 
 
-class ChangeFormatterCommandExecutor(MetaCommandBase):
+class ChangePivotCommandExecutor(MetaCommandBase):
 
     @staticmethod
     def help_text():
@@ -137,6 +139,32 @@ class ChangeFormatterCommandExecutor(MetaCommandBase):
             new_attrs=[NewAttribute(
                 value=not self.pivoted,
                 attr_name='pivoted'
+            )]
+        )
+
+
+class FormatterChangeExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return f'CHANGE RESULT FORMATTER {FormatterType.values()}.'
+
+    def exec(self, formatter_type_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
+        if not formatter_type_name:
+            print(f'current formatter is [{self.formatter.formatter_type.value}]')
+            return
+
+        if not FormatterType.is_valid_formatter_type_name(formatter_type_name):
+            raise InvalidSettingError(
+                f'{formatter_type_name} is not valid formatter type.(chose in {FormatterType.values()})'
+            )
+        new_formatter_type = FormatterType(formatter_type_name)
+
+        print(f'set formatter [{new_formatter_type.value}]')
+        return MetaCommandReturnList(
+            new_attrs=[NewAttribute(
+                value=formatter_factory(new_formatter_type),
+                attr_name='formatter'
             )]
         )
 
@@ -165,6 +193,7 @@ EXECUTORS = {
     r'\?': HelpCommandExecutor,
     r'\d': DescribeCommandExecutor,
     r'\c': ConnectCommandExecutor,
-    r'\x': ChangeFormatterCommandExecutor,
+    r'\x': ChangePivotCommandExecutor,
     r'\q': QuitCommandExecutor,
+    r'\f': FormatterChangeExecutor,
 }

@@ -8,6 +8,16 @@ class OperatorType(enum.Enum):
 
 class FormatterType(enum.Enum):
     TABLE = 'table'
+    MARKDOWN = 'markdown'
+    MARKDOWN_WITH_SQL = 'markdown_with_sql'
+
+    @classmethod
+    def values(cls):
+        return [f.value for f in cls]
+
+    @classmethod
+    def is_valid_formatter_type_name(cls, formatter_type_name: str):
+        return formatter_type_name in [f.value for f in cls]
 
 
 SQL_KEYWORDS = [
