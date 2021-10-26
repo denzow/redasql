@@ -31,11 +31,14 @@ if you want to use redasql with direnv, rename `.envrc.sample` to `.envrc` and s
 redasql has management commands.
 
 ```
+metadata=# \?
 \?: HELP META COMMANDS.
+\q: EXIT.
 \d: DESCRIBE TABLE
 \c: SELECT DATASOURCE.
 \x: QUERY RESULT TOGGLE PIVOT.
-\q: EXIT.
+\f: CHANGE RESULT FORMATTER ['table', 'markdown', 'markdown_with_sql', 'csv'].
+\l: LOAD QUERY FROM REDASH.
 ```
 
 ### execute query
@@ -46,17 +49,17 @@ see below
 ```
 $ redasql
 
-____          _                 _
-|  _ \ ___  __| | __ _ ___  __ _| |
-| |_) / _ \/ _` |/ _` / __|/ _` | |
-|  _ <  __/ (_| | (_| \__ \ (_| | |
-|_| \_\___|\__,_|\__,_|___/\__, |_|
-                              |_|
+ ____          _       ____   ___  _     
+|  _ \ ___  __| | __ _/ ___| / _ \| |    
+| |_) / _ \/ _` |/ _` \___ \| | | | |    
+|  _ <  __/ (_| | (_| |___) | |_| | |___ 
+|_| \_\___|\__,_|\__,_|____/ \__\_\_____|
+
     - redash query cli tool -
 
 SUCCESS CONNECT
 - server version 8.0.0+b32245
-- client version 0.1.0.0
+- client version 0.1.0
 
 (No DataSource)=#
 ```
@@ -153,7 +156,7 @@ Time: 0.0159s
 
 ```
 metadata=# \x
-set pivot format
+set pivoted [True]
 
 metadata=# select id, user_id from queries limit 3;
 -[RECORD 1]-------
@@ -169,6 +172,132 @@ user_id: 38
 
 3 rows returned.
 Time: 0.0281s
+
+```
+
+### formats
+
+redasql support many formats. `\f <format_name>` and `\x`
+
+
+
+#### table format(default)
+
+```
+metadata=# select id, object_id, org_id, created_at from favorites limit 3;
+
++------+-------------+----------+--------------------------+
+|   id |   object_id |   org_id | created_at               |
+|------+-------------+----------+--------------------------|
+|    2 |         513 |        1 | 2019-05-22T05:30:17.185Z |
+|    3 |         514 |        1 | 2019-05-22T05:30:19.031Z |
+|    4 |         230 |        1 | 2019-05-22T08:17:12.693Z |
++------+-------------+----------+--------------------------+
+
+3 rows returned.
+Time: 0.0219s
+```
+
+#### table format(pivoted)
+
+```
+metadata=# select id, object_id, org_id, created_at from favorites limit 3;
+
+-[RECORD 1]----------
+        id| 2
+ object_id| 513
+    org_id| 1
+created_at| 2019-05-22T05:30:17.185Z
+-[RECORD 2]----------
+        id| 3
+ object_id| 514
+    org_id| 1
+created_at| 2019-05-22T05:30:19.031Z
+-[RECORD 3]----------
+        id| 4
+ object_id| 230
+    org_id| 1
+created_at| 2019-05-22T08:17:12.693Z
+
+
+3 rows returned.
+Time: 0.0223s
+
+```
+
+#### markdown
+
+```
+metadata=# \f markdown
+set formatter [markdown]
+metadata=# select id, object_id, org_id, created_at from favorites limit 3;
+
+|   id |   object_id |   org_id | created_at               |
+|------|-------------|----------|--------------------------|
+|    2 |         513 |        1 | 2019-05-22T05:30:17.185Z |
+|    3 |         514 |        1 | 2019-05-22T05:30:19.031Z |
+|    4 |         230 |        1 | 2019-05-22T08:17:12.693Z |
+
+3 rows returned.
+Time: 0.0207s
+
+```
+
+#### markdown(pivoted)
+
+
+```
+metadata=# select id, object_id, org_id, created_at from favorites limit 3;
+
+| colum_name   | value                    |
+|--------------|--------------------------|
+| created_at   | 2019-05-22T05:30:17.185Z |
+| org_id       | 1                        |
+| id           | 2                        |
+| object_id    | 513                      |
+| created_at   | 2019-05-22T05:30:19.031Z |
+| org_id       | 1                        |
+| id           | 3                        |
+| object_id    | 514                      |
+| created_at   | 2019-05-22T08:17:12.693Z |
+| org_id       | 1                        |
+| id           | 4                        |
+| object_id    | 230                      |
+
+3 rows returned.
+Time: 0.0106s
+```
+
+#### markdown_with_sql
+
+```
+```sql
+select id, object_id, org_id, created_at from favorites limit 3;
+``` .
+
+|   id |   object_id |   org_id | created_at               |
+|------|-------------|----------|--------------------------|
+|    2 |         513 |        1 | 2019-05-22T05:30:17.185Z |
+|    3 |         514 |        1 | 2019-05-22T05:30:19.031Z |
+|    4 |         230 |        1 | 2019-05-22T08:17:12.693Z |
+
+3 rows returned.
+Time: 0.0253s
+
+
+```
+
+#### csv
+
+```
+metadata=# \f csv
+set formatter [csv]
+metadata=# select id, object_id, org_id, created_at from favorites limit 3;
+
+id,object_id,org_id,created_at
+2,513,1,2019-05-22T05:30:17.185Z
+3,514,1,2019-05-22T05:30:19.031Z
+4,230,1,2019-05-22T08:17:12.693Z
 
 ```
 

@@ -11,7 +11,7 @@ from prompt_toolkit import prompt
 from redasql.api_client import ApiClient
 from redasql.constants import SQL_KEYWORDS, SQL_KEYWORDS_META_DICT, OperatorType, FormatterType
 from redasql.dto import MetaCommandReturnList, NewAttribute, DataSourceResponse
-from redasql.exceptions import InvalidMetaCommand, InvalidSettingError
+from redasql.exceptions import InvalidMetaCommand, InvalidSettingError, InsufficientParametersError
 from redasql.result_formatter import Formatter, formatter_factory
 
 
@@ -178,7 +178,9 @@ class LoadQueryExecutor(MetaCommandBase):
     def help_text():
         return 'LOAD QUERY FROM REDASH.'
 
-    def exec(self, query_id: str, *args, **kwargs):
+    def exec(self, query_id: str = None, *args, **kwargs):
+        if not query_id:
+            raise InsufficientParametersError('query_id is not specifed.')
         if not query_id.isdigit():
             raise InvalidSettingError(f'[{query_id}] is invalid query_id.')
         query_response = self.client.get_query_by_id(int(query_id))
@@ -244,10 +246,10 @@ def meta_command_factory(command: str):
 
 EXECUTORS = {
     r'\?': HelpCommandExecutor,
+    r'\q': QuitCommandExecutor,
     r'\d': DescribeCommandExecutor,
     r'\c': ConnectCommandExecutor,
     r'\x': ChangePivotCommandExecutor,
-    r'\q': QuitCommandExecutor,
     r'\f': FormatterChangeExecutor,
     r'\l': LoadQueryExecutor,
 }
