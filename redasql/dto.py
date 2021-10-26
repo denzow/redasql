@@ -1,12 +1,8 @@
-import enum
 import datetime
 import dataclasses
 from typing import Optional, Any, List
 
-
-class OperatorType(enum.Enum):
-    REPLACE = 'replace'
-    APPEND = 'append'
+from redasql.constants import OperatorType
 
 
 @dataclasses.dataclass(frozen=True)

@@ -1,3 +1,15 @@
+import enum
+
+
+class OperatorType(enum.Enum):
+    REPLACE = 'replace'
+    APPEND = 'append'
+
+
+class FormatterType(enum.Enum):
+    TABLE = 'table'
+
+
 SQL_KEYWORDS = [
     'A',
     'ABORT',

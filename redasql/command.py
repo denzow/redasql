@@ -14,10 +14,12 @@ from prompt_toolkit.completion import FuzzyWordCompleter
 
 import redasql.utils as utils
 from redasql.api_client import ApiClient
+from redasql.constants import FormatterType
 from redasql.dto import CommandArgs, DataSourceResponse
 from redasql.exceptions import RedasqlException, InsufficientParametersError, NoDataSourceError
 from redasql.metacommand_executor import meta_command_factory
-from redasql.result_formatter import table_formatter, pivoted_formatter
+from redasql.result_formatter import formatter_factory
+
 
 VERSION = pkg_resources.get_distribution('redasql').version
 
@@ -45,6 +47,7 @@ class MainCommand:
             proxy=self.proxy
         )
         self.pivoted = False
+        self.formatter = formatter_factory(FormatterType.TABLE)
         self.input_buffer = []
         self.complete_sources = []
         self.complete_meta_dict = {}
@@ -124,7 +127,7 @@ class MainCommand:
             {query_result.runtime_for_display}
             """))
             return
-        formatted_string = self._get_formatter()(query_result)
+        formatted_string = self.formatter(query_result, self.pivoted).format()
         print(formatted_string)
         print(dedent(f"""
         {query_result.rows_count_for_display}
@@ -152,11 +155,6 @@ class MainCommand:
             data_source_name = f'{self.data_source.name}'
         suffix = '-' if self.input_buffer else '='
         return f'{data_source_name}{suffix}# '
-
-    def _get_formatter(self):
-        if self.pivoted:
-            return pivoted_formatter
-        return table_formatter
 
     def _get_completer(self):
         self.complete_sources = list(set(self.complete_sources))

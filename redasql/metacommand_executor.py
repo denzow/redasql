@@ -5,8 +5,8 @@ from typing import Optional
 from abc import ABC, abstractmethod
 
 from redasql.api_client import ApiClient
-from redasql.constants import SQL_KEYWORDS, SQL_KEYWORDS_META_DICT
-from redasql.dto import MetaCommandReturnList, NewAttribute, OperatorType, DataSourceResponse
+from redasql.constants import SQL_KEYWORDS, SQL_KEYWORDS_META_DICT, OperatorType
+from redasql.dto import MetaCommandReturnList, NewAttribute, DataSourceResponse
 from redasql.exceptions import InvalidMetaCommand
 
 
