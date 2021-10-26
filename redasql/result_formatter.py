@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from textwrap import dedent
+
 from tabulate import tabulate
 
 from redasql.constants import FormatterType
@@ -53,6 +55,59 @@ class TableFormatter(Formatter):
         return result_string
 
 
+class MarkdownFormatter(Formatter):
+    formatter_type = FormatterType.MARKDOWN
+
+    def _format_result_to_row_base(self):
+        row_for_tables = []
+        for row in self.rows:
+            row_for_tables.append([row[c] for c in self.column_name_list])
+        table = tabulate(
+            row_for_tables,
+            headers=self.column_name_list,
+            tablefmt='github'
+        )
+        return table
+
+    def _format_result_to_column_base(self):
+        row_for_tables = []
+        for row in self.rows:
+            for k, v in row.items():
+                row_for_tables.append([k, v])
+
+        table = tabulate(
+            row_for_tables,
+            headers=['colum_name', 'value'],
+            tablefmt='github'
+        )
+        return table
+
+
+class MarkdownWithSQLFormatter(MarkdownFormatter):
+    formatter_type = FormatterType.MARKDOWN_WITH_SQL
+
+    def _format_result_to_row_base(self):
+        table = super()._format_result_to_row_base()
+        result = f"""
+```sql
+{self.query}
+```
+
+{table}"""
+        return result
+
+
+    def _format_result_to_column_base(self):
+        table = super()._format_result_to_column_base()
+        result = f"""
+```sql
+{self.query}
+```
+
+{table}"""
+        return result
+
+
 def formatter_factory(formatter_type: FormatterType):
     formatter = FORMATTERS.get(formatter_type)
     return formatter
@@ -60,4 +115,6 @@ def formatter_factory(formatter_type: FormatterType):
 
 FORMATTERS = {
     FormatterType.TABLE: TableFormatter,
+    FormatterType.MARKDOWN: MarkdownFormatter,
+    FormatterType.MARKDOWN_WITH_SQL: MarkdownWithSQLFormatter,
 }

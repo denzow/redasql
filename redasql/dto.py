@@ -118,7 +118,7 @@ class QueryResultResponse:
                 response['retrieved_at'].replace('Z', '+00:00')
             ),
             query_hash=response['query_hash'],
-            query=response['data_source_id'],
+            query=response['query'],
             runtime=response['runtime'],
             data=QueryResultData.from_response(response['data']),
         )
