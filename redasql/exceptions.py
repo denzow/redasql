@@ -20,3 +20,7 @@ class InvalidMetaCommand(RedasqlException):
 
 class InsufficientParametersError(RedasqlException):
     """ api key and endpoint must be set """
+
+
+class NoDataSourceError(RedasqlException):
+    """ not set datasource """

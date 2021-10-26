@@ -1,3 +1,3 @@
 export REDASQL_REDASH_ENDPOINT=http://localhost
 export REDASQL_REDASH_APIKEY=XXXXXXXX
-#export REDASQL_HTTP_PROXY='http://user@pass:your-proxy-host:your-proxy-port'
+#export REDASQL_HTTP_PROXY=http://user@pass:your-proxy-host:your-proxy-port

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "redasql"
-version = "0.1.0.1"
+version = "0.1.0.2"
 description = ""
 authors = ["denzow <denzow@gmail.com>"]
 license = "MIT"

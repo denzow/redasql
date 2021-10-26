@@ -15,7 +15,7 @@ from prompt_toolkit.completion import FuzzyWordCompleter
 import redasql.utils as utils
 from redasql.api_client import ApiClient
 from redasql.dto import CommandArgs, DataSourceResponse
-from redasql.exceptions import RedasqlException, InsufficientParametersError
+from redasql.exceptions import RedasqlException, InsufficientParametersError, NoDataSourceError
 from redasql.metacommand_executor import meta_command_factory
 from redasql.result_formatter import table_formatter, pivoted_formatter
 
@@ -59,12 +59,12 @@ class MainCommand:
 
     def splash(self):
         print(dedent(f"""
-        ____          _                 _
-        |  _ \ ___  __| | __ _ ___  __ _| |
-        | |_) / _ \/ _` |/ _` / __|/ _` | |
-        |  _ <  __/ (_| | (_| \__ \ (_| | |
-        |_| \_\___|\__,_|\__,_|___/\__, |_|
-                                      |_|
+         ____          _       ____   ___  _     
+        |  _ \ ___  __| | __ _/ ___| / _ \| |    
+        | |_) / _ \/ _` |/ _` \___ \| | | | |    
+        |  _ <  __/ (_| | (_| |___) | |_| | |___ 
+        |_| \_\___|\__,_|\__,_|____/ \__\_\_____|
+                                                 
             - redash query cli tool -
 
         SUCCESS CONNECT
@@ -111,6 +111,8 @@ class MainCommand:
             return
 
     def execute_query_handler(self):
+        if not self.data_source:
+            raise NoDataSourceError('Plz set datasource.(use \\c <data source name>)')
         query = '\n'.join(self.input_buffer)
         query_result = self._execute_query(
             query=query,
