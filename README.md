@@ -1,5 +1,5 @@
 # RedaSQL
-![redasql](https://user-images.githubusercontent.com/4572217/138585742-dc82c105-8f43-46f4-a611-27fe49577a5b.png)
+![redasql](https://user-images.githubusercontent.com/4572217/138800787-b9525acd-8ab1-4f35-a762-948244b9caee.png)
 
 
 RedaSQL is querying tool for redash.
