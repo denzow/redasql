@@ -81,6 +81,7 @@ class MainCommand:
                 self.main()
             except RedasqlException as e:
                 print(e)
+                self.input_buffer = []
             except KeyboardInterrupt:
                 print('Cancel')
                 self.input_buffer = []
