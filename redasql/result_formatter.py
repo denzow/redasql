@@ -1,5 +1,7 @@
+import csv
 from abc import ABC, abstractmethod
 from textwrap import dedent
+from io import StringIO
 
 import tabulate
 
@@ -110,6 +112,22 @@ class MarkdownWithSQLFormatter(MarkdownFormatter):
         return result
 
 
+class CSVFormatter(MarkdownFormatter):
+    formatter_type = FormatterType.CSV
+
+    def _format_result_to_row_base(self):
+        with StringIO() as f:
+            writer = csv.DictWriter(f, fieldnames=self.column_name_list)
+            writer.writeheader()
+            for row in self.rows:
+                writer.writerow(row)
+            return f.getvalue()
+
+    def _format_result_to_column_base(self):
+        print('[warn] csv format not suppported pivot')
+        return self._format_result_to_row_base()
+
+
 def formatter_factory(formatter_type: FormatterType):
     formatter = FORMATTERS.get(formatter_type)
     return formatter
@@ -119,4 +137,5 @@ FORMATTERS = {
     FormatterType.TABLE: TableFormatter,
     FormatterType.MARKDOWN: MarkdownFormatter,
     FormatterType.MARKDOWN_WITH_SQL: MarkdownWithSQLFormatter,
+    FormatterType.CSV: CSVFormatter,
 }

@@ -10,6 +10,7 @@ class FormatterType(enum.Enum):
     TABLE = 'table'
     MARKDOWN = 'markdown'
     MARKDOWN_WITH_SQL = 'markdown_with_sql'
+    CSV = 'csv'
 
     @classmethod
     def values(cls):
