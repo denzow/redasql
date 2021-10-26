@@ -1,5 +1,6 @@
 import sys
 import itertools
+import fnmatch
 from typing import Optional
 from abc import ABC, abstractmethod
 
@@ -52,12 +53,18 @@ class DescribeCommandExecutor(MetaCommandBase):
             return
 
         for schema in schemas:
-            if schema.name.lower() == schema_name.lower():
+            if self._is_match(schema_name, schema.name):
                 print(f'## {schema.name}')
                 for col in schema.columns:
                     print(f'- {col}')
-                break
         return
+
+    @staticmethod
+    def _is_match(search_schema_name, target_schema_name):
+        """
+        support wildcard(*)
+        """
+        return fnmatch.fnmatch(target_schema_name.lower(), search_schema_name.lower())
 
 
 class ConnectCommandExecutor(MetaCommandBase):
