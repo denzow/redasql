@@ -10,15 +10,15 @@ from typing import Optional
 
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
-from prompt_toolkit.completion import FuzzyWordCompleter
 
 import redasql.utils as utils
 from redasql.api_client import ApiClient
-from redasql.constants import FormatterType
+from redasql.constants import FormatterType, CompleterType
 from redasql.dto import CommandArgs, DataSourceResponse
 from redasql.exceptions import RedasqlException, InsufficientParametersError, NoDataSourceError
 from redasql.metacommand_executor import meta_command_factory
 from redasql.result_formatter import formatter_factory
+from redasql.completer import RedasqlCompleter
 
 
 VERSION = pkg_resources.get_distribution('redasql').version
@@ -55,11 +55,11 @@ class MainCommand:
         self.complete_meta_dict = {}
         self.history = FileHistory(f'{expanduser("~")}/.redasql.hist')
         self.data_source: Optional[DataSourceResponse] = None
-        if data_source_name is None:
-            data_source_list = self.client.get_data_sources()
-            self.complete_sources = [d.name for d in data_source_list]
-            self.complete_meta_dict = {d.name: 'datasource' for d in data_source_list}
-        else:
+
+        data_source_list = self.client.get_data_sources()
+        self.complete_sources = [d.name for d in data_source_list]
+        self.complete_meta_dict = {d.name: CompleterType.DATA_SOURCE.value for d in data_source_list}
+        if data_source_name:
             self.execute_meta_command_handler(fr'\c {data_source_name}')
 
     def splash(self):
@@ -169,7 +169,8 @@ class MainCommand:
 
     def _get_completer(self):
         self.complete_sources = list(set(self.complete_sources))
-        return FuzzyWordCompleter(
+        return RedasqlCompleter(
+            latest_inputs=self.input_buffer,
             words=self.complete_sources,
             meta_dict=self.complete_meta_dict
         )

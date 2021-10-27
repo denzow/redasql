@@ -7,6 +7,15 @@ class OperatorType(enum.Enum):
     CALL = 'call'
 
 
+class CompleterType(enum.Enum):
+    KEYWORD = 'keyword'
+    COLUMN = 'column'
+    TABLE = 'table'
+    DATA_SOURCE = 'data_source'
+
+
+
+
 class FormatterType(enum.Enum):
     TABLE = 'table'
     MARKDOWN = 'markdown'
@@ -657,4 +666,4 @@ SQL_KEYWORDS = [
     'ZONE',
 ]
 
-SQL_KEYWORDS_META_DICT = {k: 'keyword' for k in SQL_KEYWORDS}
+SQL_KEYWORDS_META_DICT = {k: CompleterType.KEYWORD.value for k in SQL_KEYWORDS}

@@ -9,7 +9,13 @@ from abc import ABC, abstractmethod
 from prompt_toolkit import prompt
 
 from redasql.api_client import ApiClient
-from redasql.constants import SQL_KEYWORDS, SQL_KEYWORDS_META_DICT, OperatorType, FormatterType
+from redasql.constants import (
+    SQL_KEYWORDS,
+    SQL_KEYWORDS_META_DICT,
+    OperatorType,
+    FormatterType,
+    CompleterType,
+)
 from redasql.dto import MetaCommandReturnList, NewAttribute, DataSourceResponse
 from redasql.exceptions import InvalidMetaCommand, InvalidSettingError, InsufficientParametersError
 from redasql.result_formatter import Formatter, formatter_factory
@@ -91,7 +97,7 @@ class ConnectCommandExecutor(MetaCommandBase):
             )
             complete_meta_dict = NewAttribute(
                 attr_name='complete_meta_dict',
-                value={d.name: 'datasource' for d in data_sources},
+                value={d.name: CompleterType.DATA_SOURCE.value for d in data_sources},
                 operator=OperatorType.APPEND,
             )
 
@@ -108,18 +114,20 @@ class ConnectCommandExecutor(MetaCommandBase):
         column_names = list(
             itertools.chain.from_iterable([schema.columns for schema in schemas])
         )
-        meta_dict = {s: 'table' for s in schema_names}
+        meta_dict = {s: CompleterType.TABLE.value for s in schema_names}
         meta_dict.update(
-            {c: 'column' for c in column_names}
+            {c: CompleterType.COLUMN.value for c in column_names}
         )
         meta_dict.update(SQL_KEYWORDS_META_DICT)
         new_complete_sources = NewAttribute(
             attr_name='complete_sources',
             value=schema_names + column_names + SQL_KEYWORDS,
+            operator=OperatorType.APPEND,
         )
         new_complete_meta_dict = NewAttribute(
             attr_name='complete_meta_dict',
             value=meta_dict,
+            operator=OperatorType.APPEND,
         )
         return MetaCommandReturnList(
             new_attrs=[
