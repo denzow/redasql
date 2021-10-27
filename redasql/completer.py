@@ -12,9 +12,10 @@ class RedasqlCompleter(FuzzyWordCompleter):
 
     def get_completions(self, document, complete_event):
         targets = []
-        if self._is_from_last(document.text):
+        target_text = document.text[:document.cursor_position]
+        if self._is_from_last(target_text):
             targets.append(CompleterType.TABLE.value)
-        if self._is_in_connect(document.text):
+        if self._is_in_connect(target_text):
             targets.append(CompleterType.DATA_SOURCE.value)
 
         for completer in super().get_completions(document, complete_event):
