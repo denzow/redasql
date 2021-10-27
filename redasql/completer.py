@@ -13,8 +13,12 @@ class RedasqlCompleter(FuzzyWordCompleter):
     def get_completions(self, document, complete_event):
         targets = []
         target_text = document.text[:document.cursor_position]
-        if self._is_from_last(target_text):
+        if self.check_last_word(target_text, 'from'):
             targets.append(CompleterType.TABLE.value)
+
+        if self.check_last_word(target_text, 'select'):
+            targets.append(CompleterType.COLUMN.value)
+
         if self._is_in_connect(target_text):
             targets.append(CompleterType.DATA_SOURCE.value)
 
@@ -23,12 +27,13 @@ class RedasqlCompleter(FuzzyWordCompleter):
                 continue
             yield completer
 
-    def _is_from_last(self, text: str):
+    def check_last_word(self, text: str, expect_word: str):
         target = self.latest_input_string + ' ' + text
         target.replace('\\n', ' ')
         target_list = re.split(r'\s+', target)
+        # last 1 word is current input. so ignore.
         if len(target_list) > 2:
-            return target_list[-2].lower().strip().endswith('from')
+            return target_list[-2].lower().strip().endswith(expect_word)
         return False
 
     def _is_in_connect(self, text: str):
