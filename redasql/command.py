@@ -43,13 +43,13 @@ class CompleteData:
         return [schema.name for schema in self.schemas]
 
     def get_completer_words(self):
-        return (
+        return list(set(
                 self.column_names +
                 self.schema_names +
                 self.keywords +
                 self.data_sources +
                 self.formats
-        )
+        ))
 
     def get_completer_meta_dict(self):
         meta_dict = {}
