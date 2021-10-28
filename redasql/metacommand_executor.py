@@ -1,5 +1,4 @@
 import sys
-import itertools
 import fnmatch
 import re
 
@@ -10,14 +9,16 @@ from prompt_toolkit import prompt
 
 from redasql.api_client import ApiClient
 from redasql.constants import (
-    SQL_KEYWORDS,
-    SQL_KEYWORDS_META_DICT,
     OperatorType,
     FormatterType,
-    CompleterType,
 )
 from redasql.dto import MetaCommandReturnList, NewAttribute, DataSourceResponse
-from redasql.exceptions import InvalidMetaCommand, InvalidSettingError, InsufficientParametersError
+from redasql.exceptions import (
+    InvalidMetaCommand,
+    InvalidSettingError,
+    InsufficientParametersError,
+    NoDataSourceError
+)
 from redasql.result_formatter import Formatter, formatter_factory
 
 
@@ -56,6 +57,9 @@ class DescribeCommandExecutor(MetaCommandBase):
         return 'DESCRIBE TABLE'
 
     def exec(self, schema_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
+        if not self.data_source:
+            raise NoDataSourceError('Plz set datasource.(use \\c <data source name>)')
+
         schemas = self.client.get_schema(self.data_source.id)
         # show all tables
         if not schema_name:
@@ -91,18 +95,11 @@ class ConnectCommandExecutor(MetaCommandBase):
             for ds in data_sources:
                 print(f'{ds.name}:{ds.type}')
             complete_sources = NewAttribute(
-                attr_name='complete_sources',
+                attr_name='complete_data.data_sources',
                 value=[d.name for d in data_sources],
-                operator=OperatorType.APPEND,
             )
-            complete_meta_dict = NewAttribute(
-                attr_name='complete_meta_dict',
-                value={d.name: CompleterType.DATA_SOURCE.value for d in data_sources},
-                operator=OperatorType.APPEND,
-            )
-
             return MetaCommandReturnList(
-                new_attrs=[complete_sources, complete_meta_dict]
+                new_attrs=[complete_sources]
             )
         data_source = self.client.get_data_source_by_name(data_source_name)
         schemas = self.client.get_schema(data_source_id=data_source.id)
@@ -110,30 +107,14 @@ class ConnectCommandExecutor(MetaCommandBase):
             value=data_source,
             attr_name='data_source'
         )
-        schema_names = [schema.name for schema in schemas]
-        column_names = list(
-            itertools.chain.from_iterable([schema.columns for schema in schemas])
-        )
-        meta_dict = {s: CompleterType.TABLE.value for s in schema_names}
-        meta_dict.update(
-            {c: CompleterType.COLUMN.value for c in column_names}
-        )
-        meta_dict.update(SQL_KEYWORDS_META_DICT)
         new_complete_sources = NewAttribute(
-            attr_name='complete_sources',
-            value=schema_names + column_names + SQL_KEYWORDS,
-            operator=OperatorType.APPEND,
-        )
-        new_complete_meta_dict = NewAttribute(
-            attr_name='complete_meta_dict',
-            value=meta_dict,
-            operator=OperatorType.APPEND,
+            attr_name='complete_data.schemas',
+            value=schemas,
         )
         return MetaCommandReturnList(
             new_attrs=[
                 new_data_source,
                 new_complete_sources,
-                new_complete_meta_dict,
             ]
         )
 
@@ -179,6 +160,7 @@ class FormatterChangeExecutor(MetaCommandBase):
                 attr_name='formatter'
             )]
         )
+
 
 class LoadQueryExecutor(MetaCommandBase):
 

@@ -207,24 +207,20 @@ class MetaCommandReturnList:
     def apply(self, target: Any):
         for attribute in self.new_attrs:
             if attribute.operator is OperatorType.REPLACE:
-                setattr(target, attribute.attr_name, attribute.value)
-            elif attribute.operator is OperatorType.APPEND:
-                current_attr = getattr(target, attribute.attr_name, None)
-                if not current_attr:
-                    if isinstance(attribute.value, list):
-                        current_attr = []
-                    elif isinstance(attribute.value, dict):
-                        current_attr = {}
-                new_attr: Any = None
-                if isinstance(attribute.value, list):
-                    new_attr = current_attr + attribute.value
-                elif isinstance(attribute.value, dict):
-                    new_attr = {**current_attr, **attribute.value}
-                else:
-                    new_attr = current_attr + attribute.value
-                setattr(target, attribute.attr_name, new_attr)
+                # handle 'hoge.foo' attr name
+                attrs = list(reversed(attribute.attr_name.split('.')))
+                new_target = target
+                while len(attrs) > 1:
+                    attr = attrs.pop()
+                    new_target = getattr(new_target, attr)
+                setattr(new_target, attrs[0], attribute.value)
+
             elif attribute.operator is OperatorType.CALL:
-                attr = getattr(target, attribute.attr_name)
-                getattr(attr, attribute.method_name)(attribute.value)
+                attrs = attribute.attr_name.split('.')
+                new_target = target
+                while len(attrs) > 1:
+                    attr = attrs.pop()
+                    new_target = getattr(new_target, attr)
+                getattr(new_target, attribute.method_name)(attribute.value)
             else:
                 print(f'{attribute.operator} is unknown.')
