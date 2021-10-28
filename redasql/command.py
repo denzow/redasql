@@ -1,20 +1,21 @@
 import argparse
 import os
+import itertools
 import re
 import sys
 import pkg_resources
 
 from textwrap import dedent
 from os.path import expanduser
-from typing import Optional
+from typing import Optional, List
 
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
 
 import redasql.utils as utils
 from redasql.api_client import ApiClient
-from redasql.constants import FormatterType, CompleterType
-from redasql.dto import CommandArgs, DataSourceResponse
+from redasql.constants import FormatterType, CompleterType, SQL_KEYWORDS
+from redasql.dto import CommandArgs, DataSourceResponse, SchemaResponse
 from redasql.exceptions import RedasqlException, InsufficientParametersError, NoDataSourceError
 from redasql.metacommand_executor import meta_command_factory
 from redasql.result_formatter import formatter_factory
@@ -22,6 +23,42 @@ from redasql.completer import RedasqlCompleter
 
 
 VERSION = pkg_resources.get_distribution('redasql').version
+
+
+class CompleteData:
+    def __init__(self):
+        self.keywords = SQL_KEYWORDS
+        self.schemas: List[SchemaResponse] = []
+        self.data_sources = []
+        self.formats = FormatterType.values()
+
+    @property
+    def column_names(self):
+        return list(
+            itertools.chain.from_iterable([schema.columns for schema in self.schemas])
+        )
+
+    @property
+    def schema_names(self):
+        return [schema.name for schema in self.schemas]
+
+    def get_completer_words(self):
+        return (
+                self.column_names +
+                self.schema_names +
+                self.keywords +
+                self.data_sources +
+                self.formats
+        )
+
+    def get_completer_meta_dict(self):
+        meta_dict = {}
+        meta_dict.update({c: CompleterType.TABLE.value for c in self.schema_names})
+        meta_dict.update({c: CompleterType.COLUMN.value for c in self.column_names})
+        meta_dict.update({c: CompleterType.KEYWORD.value for c in self.keywords})
+        meta_dict.update({c: CompleterType.DATA_SOURCE.value for c in self.data_sources})
+        meta_dict.update({c: CompleterType.FORMAT.value for c in self.formats})
+        return meta_dict
 
 
 class MainCommand:
@@ -51,14 +88,12 @@ class MainCommand:
         self.pivoted = False
         self.formatter = formatter_factory(FormatterType.TABLE)
         self.input_buffer = []
-        self.complete_sources = []
-        self.complete_meta_dict = {}
+        self.complete_data = CompleteData()
         self.history = FileHistory(f'{expanduser("~")}/.redasql.hist')
         self.data_source: Optional[DataSourceResponse] = None
 
         data_source_list = self.client.get_data_sources()
-        self.complete_sources = [d.name for d in data_source_list]
-        self.complete_meta_dict = {d.name: CompleterType.DATA_SOURCE.value for d in data_source_list}
+        self.complete_data.data_sources = [d.name for d in data_source_list]
         if data_source_name:
             self.execute_meta_command_handler(fr'\c {data_source_name}')
 
@@ -168,11 +203,10 @@ class MainCommand:
         return f'{data_source_name}{suffix}# '
 
     def _get_completer(self):
-        self.complete_sources = list(set(self.complete_sources))
         return RedasqlCompleter(
             latest_inputs=self.input_buffer,
-            words=self.complete_sources,
-            meta_dict=self.complete_meta_dict
+            words=self.complete_data.get_completer_words(),
+            meta_dict=self.complete_data.get_completer_meta_dict()
         )
 
 

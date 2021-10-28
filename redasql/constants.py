@@ -3,7 +3,6 @@ import enum
 
 class OperatorType(enum.Enum):
     REPLACE = 'replace'
-    APPEND = 'append'
     CALL = 'call'
 
 
@@ -12,8 +11,15 @@ class CompleterType(enum.Enum):
     COLUMN = 'column'
     TABLE = 'table'
     DATA_SOURCE = 'data_source'
+    FORMAT = 'format'
 
-
+    @classmethod
+    def normal_completer_types(cls):
+        return [
+            cls.KEYWORD.value,
+            cls.COLUMN.value,
+            cls.TABLE.value,
+        ]
 
 
 class FormatterType(enum.Enum):
@@ -665,5 +671,3 @@ SQL_KEYWORDS = [
     'YEAR',
     'ZONE',
 ]
-
-SQL_KEYWORDS_META_DICT = {k: CompleterType.KEYWORD.value for k in SQL_KEYWORDS}
