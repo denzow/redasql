@@ -9,12 +9,16 @@ from prompt_toolkit import prompt
 
 from redasql.api_client import ApiClient
 from redasql.constants import (
-    SQL_KEYWORDS,
     OperatorType,
     FormatterType,
 )
 from redasql.dto import MetaCommandReturnList, NewAttribute, DataSourceResponse
-from redasql.exceptions import InvalidMetaCommand, InvalidSettingError, InsufficientParametersError
+from redasql.exceptions import (
+    InvalidMetaCommand,
+    InvalidSettingError,
+    InsufficientParametersError,
+    NoDataSourceError
+)
 from redasql.result_formatter import Formatter, formatter_factory
 
 
@@ -53,6 +57,9 @@ class DescribeCommandExecutor(MetaCommandBase):
         return 'DESCRIBE TABLE'
 
     def exec(self, schema_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
+        if not self.data_source:
+            raise NoDataSourceError('Plz set datasource.(use \\c <data source name>)')
+
         schemas = self.client.get_schema(self.data_source.id)
         # show all tables
         if not schema_name:
