@@ -46,6 +46,8 @@ class ApiClient:
 
     def get_schema(self, data_source_id: int) -> List[SchemaResponse]:
         res = self._get(f'api/data_sources/{data_source_id}/schema')
+        if 'schema' not in res.json():
+            return []
         return [SchemaResponse.from_response(s) for s in res.json()['schema']]
 
     def get_queries(self):
