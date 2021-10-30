@@ -17,7 +17,7 @@ from redasql.exceptions import (
 
 class ApiClient:
 
-    def __init__(self, redash_url: str, api_key: str, proxy: str = None):
+    def __init__(self, redash_url: str, api_key: str, proxy: str = None, debug: bool = False):
         self.redash_url = redash_url.rstrip('/')
         self.session = requests.Session()
         self.session.headers.update({'Authorization': f'Key {api_key}'})
@@ -26,6 +26,14 @@ class ApiClient:
             self.proxy = proxy
         if self.proxy:
             self.session.proxies.update({'http': self.proxy, 'https': self.proxy})
+        if debug:
+            import logging
+            import http.client as http_client
+            requests_log = logging.getLogger("requests.packages.urllib3")
+            requests_log.setLevel(logging.DEBUG)
+            fmt = "[DEBUG LOGGING][%(asctime)s] %(levelname)s %(name)s :%(message)s"
+            logging.basicConfig(level=logging.DEBUG, format=fmt)
+            http_client.HTTPConnection.debuglevel = 1
 
     def get_data_sources(self) -> List[DataSourceResponse]:
         res = self._get('api/data_sources')

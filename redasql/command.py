@@ -84,7 +84,8 @@ class MainCommand:
         self.client = ApiClient(
             redash_url=self.endpoint,
             api_key=self.api_key,
-            proxy=self.proxy
+            proxy=self.proxy,
+            debug=debug,
         )
         self.pivoted = False
         self.formatter = formatter_factory(FormatterType.TABLE)
