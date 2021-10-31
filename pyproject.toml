@@ -18,6 +18,7 @@ classifiers = [
 include = [
     "LICENSE",
 ]
+
 [tool.poetry.dependencies]
 python = "^3.7"
 requests = "^2.26.0"
@@ -28,3 +29,12 @@ tabulate = "^0.8.9"
 
 [tool.poetry.scripts]
 redasql = 'redasql.command:main'
+
+[build-system]
+requires = ["poetry>=1.0.2", "poetry-dynamic-versioning"]
+build-backend = "poetry.masonry.api"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+style = "pep440"
+
