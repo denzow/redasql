@@ -1,0 +1,52 @@
+name: unittest
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        redash-version:
+          - 8.0.2.b37747
+          - 9.0.0-beta.b49509
+          - 10.0.0.b50363
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Python 3
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+      - name: Install dockerize
+        env:
+          DOCKERIZE_VERSION: v0.6.1
+        run: |
+          wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+          && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+          && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+      - name: Setup docker containers
+        env:
+            REDASH_VERSION: ${{ matrix.redash-version }}
+        run: |
+          docker-compose -f ci/docker-compose.yml up -d --remove-orphans
+          docker-compose -f ci/docker-compose.yml ps
+          dockerize -timeout 60s -wait tcp://localhost:5001
+      - name: test
+        env:
+          REDASH_HOST: http://localhost:5001
+          API_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          DS_NAME: MySQL
+        run: |
+          poetry run python -m unittest discover -s ci/
