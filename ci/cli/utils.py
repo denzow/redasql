@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+from typing import List
+
 REDASH_HOST = 'http://localhost:5001'
 API_KEY = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 DS_NAME = 'MySQL'
@@ -11,7 +13,8 @@ for k, v in os.environ.items():
     if not k.startswith('REDASQL'):
         envs[k] = v
 
-def run_command():
+
+def create_redasql_process():
     p = subprocess.Popen(
         COMMAND,
         shell=True,
@@ -22,3 +25,10 @@ def run_command():
         env=envs,
     )
     return p
+
+
+def commands_to_str(command_list: List[str]):
+    result = ''
+    for command in command_list:
+        result += f'{command}\n'
+    return result
