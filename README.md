@@ -11,6 +11,10 @@ I like `psql`(PostgreSQL CLI). so redasql resemble psql in some respects.
 pip install redasql
 ```
 
+## supported readsh version
+
+RedaSQL supports Redash v8, v9 and v10.RedaSQL supports Redash v8, v9 and v10.
+
 ## How To Use
 
 redasql need some arguments or environment variables.
