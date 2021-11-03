@@ -38,6 +38,7 @@ class DataSourceResponse:
     view_only: bool
     type: str
     pause_reason: Optional[str]
+    supports_auto_limit: Optional[bool] = None  # over v9 attributes
 
     @classmethod
     def from_response(cls, response: dict):
