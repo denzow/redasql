@@ -17,12 +17,13 @@ class CliTest(TestCase):
 
     def test_describe_command__with_no_schema(self):
         stdout, stderr = self.process.communicate('\\d\n'.encode())
+        stdout = stdout.decode('utf-8')
         expected = dedent("""\
         - city
         - country
         - countrylanguage
         """)
-        self.assertIn(expected, stdout.decode('utf-8'))
+        self.assertIn(expected, stdout)
 
     def test_describe_command__with_schema(self):
         commands = [
@@ -38,7 +39,9 @@ class CliTest(TestCase):
         - District
         - Population
         """)
-        self.assertIn(expected, stdout)
+        # v8, v9 order different.
+        for line in expected.splitlines():
+            self.assertIn(line, stdout)
 
     def test_execute_query(self):
         sql = 'select Code, Name from country order by Code limit 3;'

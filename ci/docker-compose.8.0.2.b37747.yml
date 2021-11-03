@@ -1,6 +1,6 @@
 version: '2'
 x-redash-service: &redash-service
-  image: redash/redash:${REDASH_VERSION}
+  image: redash/redash:8.0.2.b37747 # 8.0.2.b37747, 9.0.0-beta.b49509, 10.0.0.b50363
   depends_on:
     - postgres
     - redis
@@ -29,7 +29,7 @@ services:
     image: postgres:9.5-alpine
     env_file: redash.env
     volumes:
-      - ./resource:/docker-entrypoint-initdb.d
+      - ./resource/init_for_8.0.2.b37747.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "9432:5432"
   mysql:
