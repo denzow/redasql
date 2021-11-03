@@ -31,7 +31,7 @@ class CliTest(TestCase):
         stdout, stderr = self.process.communicate(commands_to_str(commands).encode())
         stdout = stdout.decode('utf-8')
         expected = dedent("""\
-        MySQL=# ## city
+        ## city
         - ID
         - Name
         - CountryCode

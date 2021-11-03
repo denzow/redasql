@@ -1,12 +1,13 @@
 import os
+import sys
 import subprocess
 
 from typing import List
 
-REDASH_HOST = 'http://localhost:5001'
-API_KEY = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-DS_NAME = 'MySQL'
-COMMAND = f'poetry run python redasql/command.py -s {REDASH_HOST} -k {API_KEY} -d {DS_NAME}'
+REDASH_HOST = os.environ.get('REDASH_HOST', 'http://localhost:5001')
+API_KEY = os.environ.get('REDASH_API_KEY', 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+DS_NAME = os.environ.get('REDASH_DS_NAME', 'MySQL')
+COMMAND = f'{sys.executable} redasql/command.py -s {REDASH_HOST} -k {API_KEY} -d {DS_NAME}'
 
 envs = {}
 for k, v in os.environ.items():

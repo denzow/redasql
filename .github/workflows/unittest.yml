@@ -2,8 +2,6 @@ name: unittest
 
 on:
   push:
-    branches:
-      - master
   pull_request:
     branches:
       - master
@@ -12,6 +10,7 @@ jobs:
   unittest:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         redash-version:
           - 8.0.2.b37747
@@ -46,7 +45,7 @@ jobs:
       - name: test
         env:
           REDASH_HOST: http://localhost:5001
-          API_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-          DS_NAME: MySQL
+          REDASH_API_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          REDASH_DS_NAME: MySQL
         run: |
           poetry run python -m unittest discover -s ci/
