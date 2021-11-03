@@ -41,8 +41,7 @@ jobs:
         env:
             REDASH_VERSION: ${{ matrix.redash-version }}
         run: |
-          docker-compose -f ci/docker-compose.yml up -d --remove-orphans
-          docker-compose -f ci/docker-compose.yml ps
+          docker-compose -f ci/docker-compose.${REDASH_VERSION}.yml up -d --remove-orphans
           dockerize -timeout 60s -wait tcp://localhost:5001
       - name: test
         env:

@@ -11,6 +11,10 @@ I like `psql`(PostgreSQL CLI). so redasql resemble psql in some respects.
 pip install redasql
 ```
 
+## supported readsh version
+
+RedaSQL supports Redash v8, v9 and v10.RedaSQL supports Redash v8, v9 and v10.
+
 ## How To Use
 
 redasql need some arguments or environment variables.
@@ -310,3 +314,27 @@ metadata=# \q
 Sayonara!
 ```
 
+
+## Contribution
+
+### run test
+
+#### start up containers (redash, MySQL, postgresql)
+
+unittest necessary redash test server. use docker-compose.
+choose `REDASH_VERSION`.
+
+ - 8.0.2.b37747
+ - 9.0.0-beta.b49509
+ - 10.0.0.b50363
+
+```bash
+$ export REDASH_VERSION=8.0.2.b37747
+$ docker-compose -f ci/docker-compose.${REDASH_VERSION}.yml up -d
+```
+
+#### run test
+
+```bash
+$ python -m unittest discover -s ci/
+```

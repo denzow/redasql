@@ -1,0 +1,39 @@
+version: '2'
+x-redash-service: &redash-service
+  image: redash/redash:9.0.0-beta.b49509
+  depends_on:
+    - postgres
+    - redis
+  env_file: redash.env
+  restart: always
+services:
+  server:
+    <<: *redash-service
+    command: server
+    volumes:
+      - ./resource:/app/resource:ro
+    ports:
+      - "5001:5000"
+    environment:
+      REDASH_WEB_WORKERS: 4
+  scheduler:
+    <<: *redash-service
+    command: scheduler
+  worker:
+    <<: *redash-service
+    command: worker
+  redis:
+    image: redis:5.0-alpine
+    restart: always
+  postgres:
+    image: postgres:12-alpine
+    env_file: redash.env
+    volumes:
+      - ./resource/init_for_9.0.0-beta.b49509.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "9432:5432"
+  mysql:
+    image: kakakakakku/mysql-world-database:5.7
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      TZ: Japan
