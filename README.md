@@ -310,3 +310,18 @@ metadata=# \q
 Sayonara!
 ```
 
+
+## Contribution
+
+### run test
+
+1. start up containers (redash, MySQL, postgresql)
+```bash
+$ docker-compose -f ci/docker-compose.yml up -d
+```
+
+2. run test
+
+```bash
+$ python -m unittest discover -s ci/
+```
