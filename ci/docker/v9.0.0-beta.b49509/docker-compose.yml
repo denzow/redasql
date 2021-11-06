@@ -10,8 +10,6 @@ services:
   server:
     <<: *redash-service
     command: server
-    volumes:
-      - ./resource:/app/resource:ro
     ports:
       - "5001:5000"
     environment:
@@ -29,7 +27,7 @@ services:
     image: postgres:12-alpine
     env_file: redash.env
     volumes:
-      - ./resource/init_for_9.0.0-beta.b49509.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "9432:5432"
   mysql:
