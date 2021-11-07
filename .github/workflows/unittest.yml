@@ -40,8 +40,9 @@ jobs:
       - name: Setup docker containers
         env:
             REDASH_VERSION: ${{ matrix.redash-version }}
+        working-directory: ./tests/docker/v${{env.REDASH_VERSION}}
         run: |
-          docker-compose -f ci/docker-compose.${REDASH_VERSION}.yml up -d --remove-orphans
+          docker-compose up -d --remove-orphans
           dockerize -timeout 60s -wait tcp://localhost:5001
       - name: test
         env:
@@ -49,4 +50,4 @@ jobs:
           REDASH_API_KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
           REDASH_DS_NAME: MySQL
         run: |
-          poetry run python -m unittest discover -s ci/
+          poetry run python -m unittest discover -s tests/
