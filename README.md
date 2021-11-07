@@ -321,20 +321,19 @@ Sayonara!
 
 #### start up containers (redash, MySQL, postgresql)
 
-unittest necessary redash test server. use docker-compose.
-choose `REDASH_VERSION`.
+unittest necessary redash test server. use docker-compose.yml in `./tests/docker/v{REDAHS_VERSION}`
 
  - 8.0.2.b37747
  - 9.0.0-beta.b49509
  - 10.0.0.b50363
 
 ```bash
-$ export REDASH_VERSION=8.0.2.b37747
-$ docker-compose -f ci/docker-compose.${REDASH_VERSION}.yml up -d
+$ cd ./tests/docker/v8.0.2.b37747
+$ docker-compose up -d
 ```
 
 #### run test
 
 ```bash
-$ python -m unittest discover -s ci/
+$ python -m unittest discover -s tests/
 ```
