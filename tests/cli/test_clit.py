@@ -1,3 +1,5 @@
+import pyperclip
+
 from textwrap import dedent
 from unittest import TestCase
 from .utils import create_redasql_process, commands_to_str
@@ -129,3 +131,23 @@ class CliTest(TestCase):
         """)
         self.assertIn(expected, stdout)
         self.assertIn('', stdout)
+
+    def test_execute_query_output_to_clipboard(self):
+        sql = 'select Code, Name from country order by Code limit 3;'
+        commands = [
+            '\\o stdout_and_clipboard',
+            sql
+        ]
+        stdout, stderr = self.process.communicate(commands_to_str(commands).encode())
+        stdout = stdout.decode('utf-8')
+        expected = dedent("""
+        +--------+-------------+
+        | Code   | Name        |
+        |--------+-------------|
+        | ABW    | Aruba       |
+        | AFG    | Afghanistan |
+        | AGO    | Angola      |
+        +--------+-------------+
+        """)[1:-1]
+        self.assertIn(expected, stdout)
+        self.assertIn(expected, pyperclip.paste())

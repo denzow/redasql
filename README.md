@@ -43,6 +43,7 @@ metadata=# \?
 \x: QUERY RESULT TOGGLE PIVOT.
 \f: CHANGE RESULT FORMATTER ['table', 'markdown', 'markdown_with_sql', 'csv'].
 \l: LOAD QUERY FROM REDASH.
+\o: CHANGE THE OUTPUT DESTINATION TO ['stdout', 'stdout_and_clipboard'].
 ```
 
 ### execute query

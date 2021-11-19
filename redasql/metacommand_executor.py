@@ -11,6 +11,7 @@ from redasql.api_client import ApiClient
 from redasql.constants import (
     OperatorType,
     FormatterType,
+    OutputType,
 )
 from redasql.dto import MetaCommandReturnList, NewAttribute, DataSourceResponse
 from redasql.exceptions import (
@@ -23,11 +24,17 @@ from redasql.result_formatter import Formatter, formatter_factory
 
 
 class MetaCommandBase(ABC):
-    def __init__(self, client: ApiClient, data_source: DataSourceResponse, pivoted: bool, formatter: Formatter):
+    def __init__(self,
+                 client: ApiClient,
+                 data_source: DataSourceResponse,
+                 pivoted: bool,
+                 formatter: Formatter,
+                 output: OutputType):
         self.client = client
         self.data_source = data_source
         self.pivoted = pivoted
         self.formatter = formatter
+        self.output = output
 
     @staticmethod
     @abstractmethod
@@ -225,6 +232,32 @@ class QuitCommandExecutor(MetaCommandBase):
         sys.exit(0)
 
 
+class ChangeOutputTypeCommandExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return f'CHANGE THE OUTPUT DESTINATION TO {OutputType.values()}.'
+
+    def exec(self, output_type_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
+        if not output_type_name:
+            print(f'current  is [{self.output}]')
+            return
+
+        if not OutputType.is_valid_output_type_name(output_type_name):
+            raise InvalidSettingError(
+                f'{output_type_name} is not valid output type.(chose in {OutputType.values()})'
+            )
+        new_output_type = OutputType(output_type_name)
+
+        print(f'set output [{new_output_type.value}]')
+        return MetaCommandReturnList(
+            new_attrs=[NewAttribute(
+                value=new_output_type,
+                attr_name='output'
+            )]
+        )
+
+
 def meta_command_factory(command: str):
 
     executor = EXECUTORS.get(command)
@@ -242,4 +275,5 @@ EXECUTORS = {
     r'\x': ChangePivotCommandExecutor,
     r'\f': FormatterChangeExecutor,
     r'\l': LoadQueryExecutor,
+    r'\o': ChangeOutputTypeCommandExecutor,
 }

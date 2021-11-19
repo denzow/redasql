@@ -28,6 +28,9 @@ class RedasqlCompleter(FuzzyWordCompleter):
         if self._is_in_meta(target_text, r'\d'):
             targets = [CompleterType.TABLE.value]
 
+        if self._is_in_meta(target_text, r'\o'):
+            targets = [CompleterType.OUTPUT.value]
+
         for completer in super().get_completions(document, complete_event):
             if targets and completer.display_meta_text not in targets:
                 continue
