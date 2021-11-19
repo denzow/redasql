@@ -4,6 +4,7 @@ import itertools
 import re
 import sys
 import pkg_resources
+from pyperclip import copy
 
 from textwrap import dedent
 from os.path import expanduser
@@ -88,6 +89,7 @@ class MainCommand:
             debug=debug,
         )
         self.pivoted = False
+        self.copied = False
         self.formatter = formatter_factory(FormatterType.TABLE)
         self.input_buffer = []
         self.complete_data = CompleteData()
@@ -173,17 +175,18 @@ class MainCommand:
             """))
             return
         formatted_string = self.formatter(query_result, self.pivoted).format()
-        print('')
         print(formatted_string)
         print(dedent(f"""
         {query_result.rows_count_for_display}
         {query_result.runtime_for_display}
         """))
+        if self.copied:
+            copy(formatted_string)
 
     def execute_meta_command_handler(self, input_string):
         command, *args = re.split(r'\s+', input_string.strip())
         executor = meta_command_factory(command)
-        e = executor(self.client, self.data_source, self.pivoted, self.formatter)
+        e = executor(self.client, self.data_source, self.pivoted, self.formatter, self.copied)
         meta_command_return_list = e.exec(*args)
         if meta_command_return_list:
             meta_command_return_list.apply(self)

@@ -23,11 +23,12 @@ from redasql.result_formatter import Formatter, formatter_factory
 
 
 class MetaCommandBase(ABC):
-    def __init__(self, client: ApiClient, data_source: DataSourceResponse, pivoted: bool, formatter: Formatter):
+    def __init__(self, client: ApiClient, data_source: DataSourceResponse, pivoted: bool, formatter: Formatter, copied: bool):
         self.client = client
         self.data_source = data_source
         self.pivoted = pivoted
         self.formatter = formatter
+        self.copied = copied
 
     @staticmethod
     @abstractmethod
@@ -225,6 +226,23 @@ class QuitCommandExecutor(MetaCommandBase):
         sys.exit(0)
 
 
+class ChangeCopyCommandExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return 'COPY QUERY RESULT TO CLIPBOARD.'
+
+    def exec(self, *args, **kwargs) -> MetaCommandReturnList:
+        new_copied = not self.copied
+        print(f'set copied [{new_copied}]')
+        return MetaCommandReturnList(
+            new_attrs=[NewAttribute(
+                value=not self.copied,
+                attr_name='copied'
+            )]
+        )
+
+
 def meta_command_factory(command: str):
 
     executor = EXECUTORS.get(command)
@@ -242,4 +260,5 @@ EXECUTORS = {
     r'\x': ChangePivotCommandExecutor,
     r'\f': FormatterChangeExecutor,
     r'\l': LoadQueryExecutor,
+    r'\cp': ChangeCopyCommandExecutor,
 }
