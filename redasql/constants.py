@@ -12,6 +12,7 @@ class CompleterType(enum.Enum):
     TABLE = 'table'
     DATA_SOURCE = 'data_source'
     FORMAT = 'format'
+    OUTPUT = 'output'
 
     @classmethod
     def normal_completer_types(cls):
@@ -35,6 +36,19 @@ class FormatterType(enum.Enum):
     @classmethod
     def is_valid_formatter_type_name(cls, formatter_type_name: str):
         return formatter_type_name in [f.value for f in cls]
+
+
+class OutputType(enum.Enum):
+    STDOUT = 'stdout'
+    STDOUT_AND_CLIPBOARD = 'stdout_and_clipboard'
+
+    @classmethod
+    def values(cls):
+        return [o.value for o in cls]
+
+    @classmethod
+    def is_valid_output_type_name(cls, output_type_name: str):
+        return output_type_name in [o.value for o in cls]
 
 
 SQL_KEYWORDS = [

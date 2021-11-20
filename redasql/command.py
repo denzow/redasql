@@ -4,6 +4,7 @@ import itertools
 import re
 import sys
 import pkg_resources
+from pyperclip import copy
 
 from textwrap import dedent
 from os.path import expanduser
@@ -14,7 +15,7 @@ from prompt_toolkit.history import FileHistory
 
 import redasql.utils as utils
 from redasql.api_client import ApiClient
-from redasql.constants import FormatterType, CompleterType, SQL_KEYWORDS
+from redasql.constants import FormatterType, CompleterType, SQL_KEYWORDS, OutputType
 from redasql.dto import CommandArgs, DataSourceResponse, SchemaResponse
 from redasql.exceptions import RedasqlException, InsufficientParametersError, NoDataSourceError
 from redasql.metacommand_executor import meta_command_factory
@@ -31,6 +32,7 @@ class CompleteData:
         self.schemas: List[SchemaResponse] = []
         self.data_sources = []
         self.formats = FormatterType.values()
+        self.outputs = OutputType.values()
 
     @property
     def column_names(self):
@@ -48,7 +50,8 @@ class CompleteData:
                 self.schema_names +
                 self.keywords +
                 self.data_sources +
-                self.formats
+                self.formats +
+                self.outputs
         ))
         return sorted(words, key=lambda x: len(x))
 
@@ -59,6 +62,7 @@ class CompleteData:
         meta_dict.update({c: CompleterType.KEYWORD.value for c in self.keywords})
         meta_dict.update({c: CompleterType.DATA_SOURCE.value for c in self.data_sources})
         meta_dict.update({c: CompleterType.FORMAT.value for c in self.formats})
+        meta_dict.update({c: CompleterType.OUTPUT.value for c in self.outputs})
         return meta_dict
 
 
@@ -88,6 +92,7 @@ class MainCommand:
             debug=debug,
         )
         self.pivoted = False
+        self.output = OutputType.STDOUT
         self.formatter = formatter_factory(FormatterType.TABLE)
         self.input_buffer = []
         self.complete_data = CompleteData()
@@ -173,17 +178,18 @@ class MainCommand:
             """))
             return
         formatted_string = self.formatter(query_result, self.pivoted).format()
-        print('')
         print(formatted_string)
         print(dedent(f"""
         {query_result.rows_count_for_display}
         {query_result.runtime_for_display}
         """))
+        if self.output == OutputType.STDOUT_AND_CLIPBOARD:
+            copy(formatted_string)
 
     def execute_meta_command_handler(self, input_string):
         command, *args = re.split(r'\s+', input_string.strip())
         executor = meta_command_factory(command)
-        e = executor(self.client, self.data_source, self.pivoted, self.formatter)
+        e = executor(self.client, self.data_source, self.pivoted, self.formatter, self.output)
         meta_command_return_list = e.exec(*args)
         if meta_command_return_list:
             meta_command_return_list.apply(self)
