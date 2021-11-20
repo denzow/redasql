@@ -148,6 +148,10 @@ class CliTest(TestCase):
         | AFG    | Afghanistan |
         | AGO    | Angola      |
         +--------+-------------+
-        """)[1:-1]
+        """).strip()
         self.assertIn(expected, stdout)
-        self.assertIn(expected, pyperclip.paste())
+        from_clip_board = pyperclip.paste()
+        print('')
+        print(from_clip_board)
+        print(expected)
+        self.assertIn(expected, from_clip_board)
