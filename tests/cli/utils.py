@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 
-from typing import List
+from typing import List, Dict
 
 REDASH_HOST = os.environ.get('REDASH_HOST', 'http://localhost:5001')
 API_KEY = os.environ.get('REDASH_API_KEY', 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
@@ -15,9 +15,14 @@ for k, v in os.environ.items():
         envs[k] = v
 
 
-def create_redasql_process():
+def create_redasql_process(
+        additional_arguments: str = '',
+        additional_envs: Dict = None,
+):
+    if additional_envs:
+        envs.update(additional_envs)
     p = subprocess.Popen(
-        COMMAND,
+        COMMAND + ' ' + additional_arguments,
         shell=True,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,

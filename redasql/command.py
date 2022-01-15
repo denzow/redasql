@@ -7,7 +7,7 @@ import pkg_resources
 from pyperclip import copy
 
 from textwrap import dedent
-from os.path import expanduser
+from os.path import expanduser, exists
 from typing import Optional, List
 
 from prompt_toolkit import prompt
@@ -74,6 +74,7 @@ class MainCommand:
         api_key: str,
         proxy: str,
         data_source_name: Optional[str],
+        ignore_rc: bool,
         debug: bool,
     ):
         self.endpoint = endpoint if endpoint else os.environ.get('REDASQL_REDASH_ENDPOINT')
@@ -84,6 +85,7 @@ class MainCommand:
             """))
 
         self.proxy = proxy if proxy else os.environ.get('REDASQL_HTTP_PROXY')
+        self.ignore_rc = ignore_rc
         self.debug = debug
         self.client = ApiClient(
             redash_url=self.endpoint,
@@ -103,6 +105,23 @@ class MainCommand:
         self.complete_data.data_sources = [d.name for d in data_source_list]
         if data_source_name:
             self.execute_meta_command_handler(fr'\c {data_source_name}')
+
+    def load_config_from_rc_file(self):
+        if self.ignore_rc:
+            return
+        rc_file_path = os.environ.get('REDASQL_RCFILE') if os.environ.get('REDASQL_RCFILE') \
+            else f'{expanduser("~")}/.redasqlrc'
+        if not exists(rc_file_path):
+            return
+        with open(rc_file_path, 'r') as f:
+            print(f'** load rc file from {rc_file_path} **')
+            for line in f:
+                if line:
+                    try:
+                        self._input_handler(line)
+                    except Exception as e:
+                        print(e)
+
 
     def splash(self):
         print(dedent(f"""
@@ -145,19 +164,22 @@ class MainCommand:
             history=self.history,
             completer=self._get_completer(),
         )
+        self._input_handler(answer)
+
+    def _input_handler(self, input_text: str):
         if self.debug:
             print('buffer', self.input_buffer)
         # ignore empty line.
-        if utils.is_empty(answer):
+        if utils.is_empty(input_text):
             return
 
-        self.input_buffer.append(answer)
-        if utils.is_meta_command(answer):
+        self.input_buffer.append(input_text)
+        if utils.is_meta_command(input_text):
             self.input_buffer = []
-            self.execute_meta_command_handler(answer)
+            self.execute_meta_command_handler(input_text)
             return
 
-        if utils.is_sql_end(answer):
+        if utils.is_sql_end(input_text):
             query = '\n'.join(self.input_buffer)
             self.input_buffer = []
             self.execute_query_handler(query)
@@ -191,6 +213,8 @@ class MainCommand:
         executor = meta_command_factory(command)
         e = executor(self.client, self.data_source, self.pivoted, self.formatter, self.output)
         meta_command_return_list = e.exec(*args)
+        if self.debug:
+            print(command, args, meta_command_return_list)
         if meta_command_return_list:
             meta_command_return_list.apply(self)
 
@@ -223,6 +247,7 @@ def main():
     try:
         command = MainCommand(**args.to_dict())
         command.splash()
+        command.load_config_from_rc_file()
     except Exception as e:
         print(f'[ERROR] {e}\n')
         sys.exit(1)
@@ -263,6 +288,14 @@ def init():
         default=None,
     )
     parser.add_argument(
+        '--ignore-rc',
+        help=dedent("""
+        ignore rc file
+        """),
+        action='store_true',
+        default=False,
+    )
+    parser.add_argument(
         '--debug',
         help=dedent("""
         debug mode on
@@ -276,6 +309,7 @@ def init():
         endpoint=args.server_host,
         data_source_name=args.data_source,
         proxy=args.proxy,
+        ignore_rc=args.ignore_rc,
         debug=args.debug,
     )
 
