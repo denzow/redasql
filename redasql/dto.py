@@ -11,6 +11,7 @@ class CommandArgs:
     endpoint: Optional[str]
     data_source_name: Optional[str]
     proxy: Optional[str]
+    ignore_rc: bool
     debug: bool
 
     def to_dict(self):

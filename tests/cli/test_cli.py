@@ -11,7 +11,7 @@ class CliTest(TestCase):
     """
 
     def setUp(self) -> None:
-        self.process = create_redasql_process()
+        self.process = create_redasql_process('--ignore-rc')
 
     def tearDown(self) -> None:
         if self.process.returncode is None:

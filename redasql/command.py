@@ -74,6 +74,7 @@ class MainCommand:
         api_key: str,
         proxy: str,
         data_source_name: Optional[str],
+        ignore_rc: bool,
         debug: bool,
     ):
         self.endpoint = endpoint if endpoint else os.environ.get('REDASQL_REDASH_ENDPOINT')
@@ -84,6 +85,7 @@ class MainCommand:
             """))
 
         self.proxy = proxy if proxy else os.environ.get('REDASQL_HTTP_PROXY')
+        self.ignore_rc = ignore_rc
         self.debug = debug
         self.client = ApiClient(
             redash_url=self.endpoint,
@@ -105,10 +107,14 @@ class MainCommand:
             self.execute_meta_command_handler(fr'\c {data_source_name}')
 
     def load_config_from_rc_file(self):
-        rc_file_path = f'{expanduser("~")}/.redasqlrc'
+        if self.ignore_rc:
+            return
+        rc_file_path = os.environ.get('REDASQL_RCFILE') if os.environ.get('REDASQL_RCFILE') \
+            else f'{expanduser("~")}/.redasqlrc'
         if not exists(rc_file_path):
             return
         with open(rc_file_path, 'r') as f:
+            print(f'** load rc file from {rc_file_path} **')
             for line in f:
                 if line:
                     try:
@@ -282,6 +288,14 @@ def init():
         default=None,
     )
     parser.add_argument(
+        '--ignore-rc',
+        help=dedent("""
+        ignore rc file
+        """),
+        action='store_true',
+        default=False,
+    )
+    parser.add_argument(
         '--debug',
         help=dedent("""
         debug mode on
@@ -295,6 +309,7 @@ def init():
         endpoint=args.server_host,
         data_source_name=args.data_source,
         proxy=args.proxy,
+        ignore_rc=args.ignore_rc,
         debug=args.debug,
     )
 
