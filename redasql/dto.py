@@ -41,6 +41,10 @@ class DataSourceResponse:
     pause_reason: Optional[str]
     supports_auto_limit: Optional[bool] = None  # over v9 attributes
 
+    @property
+    def is_query_results(self):
+        return self.type in ('results', 'resultswithparams')
+
     @classmethod
     def from_response(cls, response: dict):
         return cls(**response)

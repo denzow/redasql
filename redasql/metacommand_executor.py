@@ -63,10 +63,23 @@ class DescribeCommandExecutor(MetaCommandBase):
     def help_text():
         return 'DESCRIBE TABLE'
 
+    @staticmethod
+    def _is_match(search_schema_name, target_schema_name):
+        """
+        support wildcard(*)
+        """
+        return fnmatch.fnmatch(target_schema_name.lower(), search_schema_name.lower())
+
     def exec(self, schema_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         if not self.data_source:
             raise NoDataSourceError('Plz set datasource.(use \\c <data source name>)')
 
+        if self.data_source.is_query_results:
+            return self._exec_for_query_results(schema_name)
+        else:
+            return self._exec_for_normal(schema_name)
+
+    def _exec_for_normal(self, schema_name: str = None):
         schemas = self.client.get_schema(self.data_source.id)
         # show all tables
         if not schema_name:
@@ -82,12 +95,21 @@ class DescribeCommandExecutor(MetaCommandBase):
                     print(f'- {col}')
         return
 
-    @staticmethod
-    def _is_match(search_schema_name, target_schema_name):
+    def _exec_for_query_results(self, schema_name: str = None):
         """
-        support wildcard(*)
+        QueryResultsはdescribe非対応なので、空クエリを投げてCOL情報を
+        取得する。
         """
-        return fnmatch.fnmatch(target_schema_name.lower(), search_schema_name.lower())
+        if not schema_name:
+            print('query results not support show all schemas.')
+        response = self.client.execute_query(
+            query=f'select * from {schema_name} where 1 = 2;',
+            data_source_id=self.data_source.id
+        )
+        print(f'## {schema_name}')
+        for col in response.data.columns:
+            print(f'- {col.name}')
+        return
 
 
 class ConnectCommandExecutor(MetaCommandBase):
