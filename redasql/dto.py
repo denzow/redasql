@@ -224,7 +224,7 @@ class MetaCommandReturnList:
             elif attribute.operator is OperatorType.CALL:
                 attrs = attribute.attr_name.split('.')
                 new_target = target
-                while len(attrs) > 1:
+                while len(attrs) >= 1:
                     attr = attrs.pop()
                     new_target = getattr(new_target, attr)
                 getattr(new_target, attribute.method_name)(attribute.value)

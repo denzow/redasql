@@ -60,6 +60,8 @@ class CliTest(TestCase):
         
         3 rows returned.
         """)
+        print('test_execute_query', stdout)
+        print('#' * 20)
         self.assertIn(expected, stdout)
         self.assertIn('', stdout)
 
@@ -85,6 +87,7 @@ class CliTest(TestCase):
         
         3 rows returned.
         """)
+        print(stdout)
         self.assertIn(expected, stdout)
         self.assertIn('', stdout)
 
@@ -105,6 +108,7 @@ class CliTest(TestCase):
         
         3 rows returned.
         """)
+        print(stdout)
         self.assertIn(expected, stdout)
         self.assertIn('', stdout)
 
@@ -129,6 +133,7 @@ class CliTest(TestCase):
         
         3 rows returned.
         """)
+        print(stdout)
         self.assertIn(expected, stdout)
         self.assertIn('', stdout)
 
@@ -149,5 +154,18 @@ class CliTest(TestCase):
         | AGO    | Angola      |
         +--------+-------------+
         """)[1:-1]
+        print(stdout)
         self.assertIn(expected, stdout)
         self.assertIn(expected, pyperclip.paste())
+
+    def test_execute_load_query(self):
+        commands = [
+            '\\l 1',
+        ]
+        stdout, stderr = self.process.communicate(commands_to_str(commands).encode())
+        stdout = stdout.decode('utf-8')
+        expected = dedent("""\
+        select * from country order by 1;
+        """)
+        print(stdout)
+        self.assertIn(expected, stdout)

@@ -1112,7 +1112,7 @@ COPY public.organizations (updated_at, created_at, id, name, slug, settings) FRO
 --
 
 COPY public.queries (updated_at, created_at, id, version, org_id, data_source_id, latest_query_data_id, name, description, query, query_hash, api_key, user_id, last_modified_by_id, is_archived, is_draft, schedule, schedule_failures, options, search_vector, tags) FROM stdin;
-2021-11-03 13:35:47.860664+00	2021-11-03 13:35:25.450719+00	1	1	1	1	1	country	\N	select * from country;	27bda5128a5e2354eb08e638a1c44906	3B8cGBacQ2QO9eEja6eKiwcEaJEVfmeE7neZWJji	1	1	f	f	\N	0	{"apply_auto_limit": true, "parameters": []}	'1':1B 'country':2A,5 'from':4 'select':3	{}
+2021-11-03 13:35:47.860664+00	2021-11-03 13:35:25.450719+00	1	1	1	1	1	country	\N	select * from country order by 1;	27bda5128a5e2354eb08e638a1c44906	3B8cGBacQ2QO9eEja6eKiwcEaJEVfmeE7neZWJji	1	1	f	f	\N	0	{"apply_auto_limit": true, "parameters": []}	'1':1B 'country':2A,5 'from':4 'select':3	{}
 \.
 
 
