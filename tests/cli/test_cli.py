@@ -1,8 +1,13 @@
 import pyperclip
+import os
+
 
 from textwrap import dedent
 from unittest import TestCase
 from .utils import create_redasql_process, commands_to_str
+
+
+BASE_DIR = os.path.dirname(__file__)
 
 
 class CliTest(TestCase):
@@ -189,3 +194,29 @@ class CliTest(TestCase):
         """)
         print(stdout)
         self.assertIn(expected, stdout)
+
+    def test_execute_load_file(self):
+        commands = [
+            f'\\i {BASE_DIR}/data/test.sql',
+        ]
+        stdout, stderr = self.process.communicate(commands_to_str(commands).encode())
+        stdout = stdout.decode('utf-8')
+        expected_query = dedent("""\
+        select
+            Name
+        from country order by 1
+        limit 3
+        ;
+        """)
+        expected_result = dedent("""\
+        +-------------+
+        | Name        |
+        |-------------|
+        | Afghanistan |
+        | Albania     |
+        | Algeria     |
+        +-------------+
+        """)
+        print(stdout)
+        self.assertIn(expected_query, stdout)
+        self.assertIn(expected_result, stdout)

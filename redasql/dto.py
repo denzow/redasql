@@ -222,7 +222,7 @@ class MetaCommandReturnList:
                 setattr(new_target, attrs[0], attribute.value)
 
             elif attribute.operator is OperatorType.CALL:
-                attrs = attribute.attr_name.split('.')
+                attrs = attribute.attr_name.split('.') if attribute.attr_name else []
                 new_target = target
                 while len(attrs) >= 1:
                     attr = attrs.pop()
