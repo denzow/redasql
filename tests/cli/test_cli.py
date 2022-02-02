@@ -61,7 +61,6 @@ class CliTest(TestCase):
         3 rows returned.
         """)
         print('test_execute_query', stdout)
-        print('#' * 20)
         self.assertIn(expected, stdout)
         self.assertIn('', stdout)
 
@@ -107,6 +106,27 @@ class CliTest(TestCase):
         | AGO    | Angola      |
         
         3 rows returned.
+        """)
+        print(stdout)
+        self.assertIn(expected, stdout)
+        self.assertIn('', stdout)
+
+    def test_execute_query_markdown_pivoted(self):
+        sql = 'select id, name, countrycode, district, population from city limit 1;'
+        commands = [
+            '\\f markdown',
+            '\\x',
+            sql
+        ]
+        stdout, stderr = self.process.communicate(commands_to_str(commands).encode())
+        stdout = stdout.decode('utf-8')
+        expected = dedent("""\
+        |--------------|---------|
+        | id           | 1       |
+        | name         | Kabul   |
+        | countrycode  | AFG     |
+        | district     | Kabol   |
+        | population   | 1780000 |
         """)
         print(stdout)
         self.assertIn(expected, stdout)
