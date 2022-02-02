@@ -122,7 +122,6 @@ class MainCommand:
                     except Exception as e:
                         print(e)
 
-
     def splash(self):
         print(dedent(f"""
          ____          _       ____   ___  _     

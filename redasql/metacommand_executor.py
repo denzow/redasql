@@ -199,14 +199,14 @@ class LoadQueryExecutor(MetaCommandBase):
 
     def exec(self, query_id: str = None, *args, **kwargs):
         if not query_id:
-            raise InsufficientParametersError('query_id is not specifed.')
+            raise InsufficientParametersError('query_id is not specified.')
         if not query_id.isdigit():
             raise InvalidSettingError(f'[{query_id}] is invalid query_id.')
         query_response = self.client.get_query_by_id(int(query_id))
         query = query_response.query
         for parameter in query_response.parameters:
             answer = prompt(f'{parameter.name}? > ')
-            query = self._resplace_parameter(query, parameter.name, answer)
+            query = self._replace_parameter(query, parameter.name, answer)
         print(query)
         # set buffer for query execution and add history
         new_attrs = [
@@ -239,7 +239,7 @@ class LoadQueryExecutor(MetaCommandBase):
         )
 
     @staticmethod
-    def _resplace_parameter(base_str: str, replace_keyword, replace_value):
+    def _replace_parameter(base_str: str, replace_keyword, replace_value):
         return re.sub(f'{{{{ *{replace_keyword} *}}}}', replace_value, base_str)
 
 
@@ -280,6 +280,40 @@ class ChangeOutputTypeCommandExecutor(MetaCommandBase):
         )
 
 
+class LoadFileExecutor(MetaCommandBase):
+
+    @staticmethod
+    def help_text():
+        return f'CHANGE THE OUTPUT DESTINATION TO {OutputType.values()}.'
+
+    def exec(self, file_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
+        if not file_name:
+            raise InsufficientParametersError('file_name not provided.')
+        with open(file_name, mode='r') as f:
+            query = f.read()
+            if not query.rstrip().endswith(';'):
+                query += ';'
+            print(query)
+            new_attrs = [
+                NewAttribute(
+                    value=query,
+                    attr_name='',
+                    method_name='execute_query_handler',
+                    operator=OperatorType.CALL,
+                ),
+                NewAttribute(
+                    value=query,
+                    attr_name='history',
+                    method_name='append_string',
+                    operator=OperatorType.CALL,
+                ),
+            ]
+
+        return MetaCommandReturnList(
+            new_attrs=new_attrs
+        )
+
+
 def meta_command_factory(command: str):
 
     executor = EXECUTORS.get(command)
@@ -298,4 +332,5 @@ EXECUTORS = {
     r'\f': FormatterChangeExecutor,
     r'\l': LoadQueryExecutor,
     r'\o': ChangeOutputTypeCommandExecutor,
+    r'\i': LoadFileExecutor,
 }
