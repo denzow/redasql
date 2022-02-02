@@ -75,8 +75,8 @@ class MarkdownFormatter(Formatter):
     def _format_result_to_column_base(self):
         row_for_tables = []
         for row in self.rows:
-            for k, v in row.items():
-                row_for_tables.append([k, v])
+            for column_name in self.column_name_list:
+                row_for_tables.append([column_name, row[column_name]])
 
         table = tabulate.tabulate(
             row_for_tables,
@@ -98,7 +98,6 @@ class MarkdownWithSQLFormatter(MarkdownFormatter):
 
 {table}"""
         return result
-
 
     def _format_result_to_column_base(self):
         table = super()._format_result_to_column_base()
