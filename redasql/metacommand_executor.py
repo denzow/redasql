@@ -284,7 +284,7 @@ class LoadFileExecutor(MetaCommandBase):
 
     @staticmethod
     def help_text():
-        return f'CHANGE THE OUTPUT DESTINATION TO {OutputType.values()}.'
+        return 'LOAD QUERY FROM LOCAL FILE.'
 
     def exec(self, file_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         if not file_name:
