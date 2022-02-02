@@ -309,6 +309,25 @@ id,object_id,org_id,created_at
 
 ```
 
+### run sqlfile
+
+`\i` run local sqlfile.
+
+```
+metadata=# \i test.sql
+select count(*) from queries;
+
++---------+
+|   count |
+|---------|
+|    3876 |
++---------+
+
+1 row returned.
+Time: 0.018s
+
+```
+
 ### quit
 
 `ctrl + D` or `\q` quit redasql.

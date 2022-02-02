@@ -300,13 +300,7 @@ class LoadFileExecutor(MetaCommandBase):
                     attr_name='',
                     method_name='execute_query_handler',
                     operator=OperatorType.CALL,
-                ),
-                NewAttribute(
-                    value=query,
-                    attr_name='history',
-                    method_name='append_string',
-                    operator=OperatorType.CALL,
-                ),
+                )
             ]
 
         return MetaCommandReturnList(
