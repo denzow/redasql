@@ -1,6 +1,5 @@
 import argparse
 import os
-import itertools
 import re
 import sys
 import pkg_resources
@@ -8,62 +7,22 @@ from pyperclip import copy
 
 from textwrap import dedent
 from os.path import expanduser, exists
-from typing import Optional, List
+from typing import Optional
 
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
 
 import redasql.utils as utils
 from redasql.api_client import ApiClient
-from redasql.constants import FormatterType, CompleterType, SQL_KEYWORDS, OutputType
-from redasql.dto import CommandArgs, DataSourceResponse, SchemaResponse
+from redasql.constants import FormatterType, OutputType
+from redasql.dto import CommandArgs, DataSourceResponse
 from redasql.exceptions import RedasqlException, InsufficientParametersError, NoDataSourceError
 from redasql.metacommand_executor import meta_command_factory
 from redasql.result_formatter import formatter_factory
-from redasql.completer import RedasqlCompleter
+from redasql.completer import RedasqlCompleter, CompleteData
 
 
 VERSION = pkg_resources.get_distribution('redasql').version
-
-
-class CompleteData:
-    def __init__(self):
-        self.keywords = SQL_KEYWORDS
-        self.schemas: List[SchemaResponse] = []
-        self.data_sources = []
-        self.formats = FormatterType.values()
-        self.outputs = OutputType.values()
-
-    @property
-    def column_names(self):
-        return list(
-            itertools.chain.from_iterable([schema.columns for schema in self.schemas])
-        )
-
-    @property
-    def schema_names(self):
-        return [schema.name for schema in self.schemas]
-
-    def get_completer_words(self):
-        words = list(set(
-                self.column_names +
-                self.schema_names +
-                self.keywords +
-                self.data_sources +
-                self.formats +
-                self.outputs
-        ))
-        return sorted(words, key=lambda x: len(x))
-
-    def get_completer_meta_dict(self):
-        meta_dict = {}
-        meta_dict.update({c: CompleterType.TABLE.value for c in self.schema_names})
-        meta_dict.update({c: CompleterType.COLUMN.value for c in self.column_names})
-        meta_dict.update({c: CompleterType.KEYWORD.value for c in self.keywords})
-        meta_dict.update({c: CompleterType.DATA_SOURCE.value for c in self.data_sources})
-        meta_dict.update({c: CompleterType.FORMAT.value for c in self.formats})
-        meta_dict.update({c: CompleterType.OUTPUT.value for c in self.outputs})
-        return meta_dict
 
 
 class MainCommand:

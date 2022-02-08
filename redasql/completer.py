@@ -1,7 +1,50 @@
 import re
+import itertools
+
 from typing import List
 from prompt_toolkit.completion import FuzzyWordCompleter
-from redasql.constants import CompleterType
+from redasql.constants import FormatterType, CompleterType, SQL_KEYWORDS, OutputType
+from redasql.dto import SchemaResponse
+
+
+class CompleteData:
+    def __init__(self):
+        self.keywords = SQL_KEYWORDS
+        self.schemas: List[SchemaResponse] = []
+        self.data_sources = []
+        self.formats = FormatterType.values()
+        self.outputs = OutputType.values()
+
+    @property
+    def column_names(self):
+        return list(
+            itertools.chain.from_iterable([schema.columns for schema in self.schemas])
+        )
+
+    @property
+    def schema_names(self):
+        return [schema.name for schema in self.schemas]
+
+    def get_completer_words(self):
+        words = list(set(
+                self.column_names +
+                self.schema_names +
+                self.keywords +
+                self.data_sources +
+                self.formats +
+                self.outputs
+        ))
+        return sorted(words, key=lambda x: len(x))
+
+    def get_completer_meta_dict(self):
+        meta_dict = {}
+        meta_dict.update({c: CompleterType.TABLE.value for c in self.schema_names})
+        meta_dict.update({c: CompleterType.COLUMN.value for c in self.column_names})
+        meta_dict.update({c: CompleterType.KEYWORD.value for c in self.keywords})
+        meta_dict.update({c: CompleterType.DATA_SOURCE.value for c in self.data_sources})
+        meta_dict.update({c: CompleterType.FORMAT.value for c in self.formats})
+        meta_dict.update({c: CompleterType.OUTPUT.value for c in self.outputs})
+        return meta_dict
 
 
 class RedasqlCompleter(FuzzyWordCompleter):
@@ -31,8 +74,11 @@ class RedasqlCompleter(FuzzyWordCompleter):
         if self._is_in_meta(target_text, r'\o'):
             targets = [CompleterType.OUTPUT.value]
 
+        if self._is_in_meta(target_text, r'\i'):
+            targets = [CompleterType.OUTPUT.value]
+
         for completer in super().get_completions(document, complete_event):
-            if targets and completer.display_meta_text not in targets:
+            if targets and (completer.display_meta_text not in targets):
                 continue
             yield completer
 
