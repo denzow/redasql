@@ -13,6 +13,7 @@ class CompleterType(enum.Enum):
     DATA_SOURCE = 'data_source'
     FORMAT = 'format'
     OUTPUT = 'output'
+    FILE = 'file'
 
     @classmethod
     def normal_completer_types(cls):

@@ -1,7 +1,9 @@
 import re
 import itertools
 
+from pathlib import Path
 from typing import List
+
 from prompt_toolkit.completion import FuzzyWordCompleter
 from redasql.constants import FormatterType, CompleterType, SQL_KEYWORDS, OutputType
 from redasql.dto import SchemaResponse
@@ -25,6 +27,12 @@ class CompleteData:
     def schema_names(self):
         return [schema.name for schema in self.schemas]
 
+    @property
+    def local_files(self):
+        return [
+            item.name for item in Path('.').iterdir() if item.is_file()
+        ]
+
     def get_completer_words(self):
         words = list(set(
                 self.column_names +
@@ -32,7 +40,8 @@ class CompleteData:
                 self.keywords +
                 self.data_sources +
                 self.formats +
-                self.outputs
+                self.outputs +
+                self.local_files
         ))
         return sorted(words, key=lambda x: len(x))
 
@@ -44,6 +53,7 @@ class CompleteData:
         meta_dict.update({c: CompleterType.DATA_SOURCE.value for c in self.data_sources})
         meta_dict.update({c: CompleterType.FORMAT.value for c in self.formats})
         meta_dict.update({c: CompleterType.OUTPUT.value for c in self.outputs})
+        meta_dict.update({c: CompleterType.FILE.value for c in self.local_files})
         return meta_dict
 
 
@@ -75,7 +85,7 @@ class RedasqlCompleter(FuzzyWordCompleter):
             targets = [CompleterType.OUTPUT.value]
 
         if self._is_in_meta(target_text, r'\i'):
-            targets = [CompleterType.OUTPUT.value]
+            targets = [CompleterType.FILE.value]
 
         for completer in super().get_completions(document, complete_event):
             if targets and (completer.display_meta_text not in targets):
