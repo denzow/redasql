@@ -28,3 +28,7 @@ class InsufficientParametersError(RedasqlException):
 
 class NoDataSourceError(RedasqlException):
     """ not set datasource """
+
+
+class SqlFileNotFoundError(RedasqlException):
+    """ specified file is not exists. """
