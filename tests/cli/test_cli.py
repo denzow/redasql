@@ -220,3 +220,14 @@ class CliTest(TestCase):
         print(stdout)
         self.assertIn(expected_query, stdout)
         self.assertIn(expected_result, stdout)
+
+    def test_execute_load_file__with_not_exists(self):
+        file_name = f'{BASE_DIR}/data/not_exists.sql'
+        commands = [
+            f'\\i {file_name}',
+        ]
+        stdout, stderr = self.process.communicate(commands_to_str(commands).encode())
+        stdout = stdout.decode('utf-8')
+        expected_result = f'{file_name} is not exists.'
+        print(stdout)
+        self.assertIn(expected_result, stdout)

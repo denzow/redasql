@@ -1,3 +1,4 @@
+import os.path
 import sys
 import fnmatch
 import re
@@ -18,7 +19,8 @@ from redasql.exceptions import (
     InvalidMetaCommand,
     InvalidSettingError,
     InsufficientParametersError,
-    NoDataSourceError
+    NoDataSourceError,
+    SqlFileNotFoundError
 )
 from redasql.result_formatter import Formatter, formatter_factory
 
@@ -289,6 +291,9 @@ class LoadFileExecutor(MetaCommandBase):
     def exec(self, file_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         if not file_name:
             raise InsufficientParametersError('file_name not provided.')
+        if not os.path.exists(file_name):
+            raise SqlFileNotFoundError(f'{file_name} is not exists.')
+
         with open(file_name, mode='r') as f:
             query = f.read()
             if not query.rstrip().endswith(';'):
