@@ -61,10 +61,14 @@ class TableFormatter(Formatter):
 class MarkdownFormatter(Formatter):
     formatter_type = FormatterType.MARKDOWN
 
+    @staticmethod
+    def _replace_line_break(raw_data: str):
+        return raw_data.replace('\n', '<br/>')
+
     def _format_result_to_row_base(self):
         row_for_tables = []
         for row in self.rows:
-            row_for_tables.append([row[c] for c in self.column_name_list])
+            row_for_tables.append([self._replace_line_break(row[c]) for c in self.column_name_list])
         table = tabulate.tabulate(
             row_for_tables,
             headers=self.column_name_list,
