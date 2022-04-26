@@ -17,18 +17,26 @@ class FormatterTest(TestCase):
             query='select \'a\na\' col',
             runtime=0.1,
             data=QueryResultData(
-                rows=[{'col': 'a\na'}],
-                columns=[QueryResultColumn(
-                    friendly_name='col',
-                    type='string',
-                    name='col',
-                )]
+                rows=[{'col1': 'a\na', 'col2': 1}],
+                columns=[
+                    QueryResultColumn(
+                        friendly_name='col1',
+                        type='string',
+                        name='col1',
+                    ),
+                    QueryResultColumn(
+                        friendly_name='col2',
+                        type='integer',
+                        name='col2',
+                    ),
+                ]
             )
         )
         formatter = MarkdownFormatter(mock_query_result_response, pivoted=False)
         formatted_string = formatter.format()
         expected = dedent("""\
-        | col     |
-        |---------|
-        | a<br/>a |""")
+        | col1    |   col2 |
+        |---------|--------|
+        | a<br/>a |      1 |""")
+        print(formatted_string)
         self.assertEqual(formatted_string, expected)

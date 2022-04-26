@@ -1,6 +1,7 @@
 import csv
 from abc import ABC, abstractmethod
 from io import StringIO
+from typing import Any
 
 import tabulate
 
@@ -62,8 +63,10 @@ class MarkdownFormatter(Formatter):
     formatter_type = FormatterType.MARKDOWN
 
     @staticmethod
-    def _replace_line_break(raw_data: str):
-        return raw_data.replace('\n', '<br/>')
+    def _replace_line_break(raw_data: Any):
+        if isinstance(raw_data, str):
+            return raw_data.replace('\n', '<br/>')
+        return raw_data
 
     def _format_result_to_row_base(self):
         row_for_tables = []
