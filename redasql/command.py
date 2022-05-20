@@ -61,7 +61,7 @@ class MainCommand:
         self.data_source: Optional[DataSourceResponse] = None
 
         data_source_list = self.client.get_data_sources()
-        self.complete_data.data_sources = [d.name for d in data_source_list]
+        self.complete_data.data_sources = data_source_list
         if data_source_name:
             self.execute_meta_command_handler(fr'\c {data_source_name}')
 
@@ -146,6 +146,9 @@ class MainCommand:
     def execute_query_handler(self, query: str):
         if not self.data_source:
             raise NoDataSourceError('Plz set datasource.(use \\c <data source name>)')
+
+        if self.data_source.is_cached_query_results:
+            query = re.sub('(query_\\d+)', r'cached_\1', query)
 
         query_result = self._execute_query(
             query=query,

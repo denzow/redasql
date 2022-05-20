@@ -1,5 +1,8 @@
 import enum
 
+CACHED_RESULTS_PREFIX = 'cached_'
+CACHED_QUERY_RESULTS_TYPE = 'cached_results'
+
 
 class OperatorType(enum.Enum):
     REPLACE = 'replace'

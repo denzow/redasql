@@ -6,14 +6,15 @@ from typing import List
 
 from prompt_toolkit.completion import FuzzyWordCompleter
 from redasql.constants import FormatterType, CompleterType, SQL_KEYWORDS, OutputType
-from redasql.dto import SchemaResponse
+from redasql.dto import SchemaResponse, DataSourceResponse
+from redasql.constants import CACHED_RESULTS_PREFIX
 
 
 class CompleteData:
     def __init__(self):
         self.keywords = SQL_KEYWORDS
         self.schemas: List[SchemaResponse] = []
-        self.data_sources = []
+        self.data_sources: List[DataSourceResponse] = []
         self.formats = FormatterType.values()
         self.outputs = OutputType.values()
 
@@ -33,12 +34,21 @@ class CompleteData:
             item.name for item in Path('.').iterdir() if item.is_file()
         ]
 
+    @property
+    def data_source_names(self):
+        ds_names = []
+        for ds in self.data_sources:
+            ds_names.append(ds.name)
+            if 'results' == ds.type:
+                ds_names.append(f'{CACHED_RESULTS_PREFIX}{ds.name}')
+        return ds_names
+
     def get_completer_words(self):
         words = list(set(
                 self.column_names +
                 self.schema_names +
                 self.keywords +
-                self.data_sources +
+                self.data_source_names +
                 self.formats +
                 self.outputs +
                 self.local_files
@@ -50,7 +60,7 @@ class CompleteData:
         meta_dict.update({c: CompleterType.TABLE.value for c in self.schema_names})
         meta_dict.update({c: CompleterType.COLUMN.value for c in self.column_names})
         meta_dict.update({c: CompleterType.KEYWORD.value for c in self.keywords})
-        meta_dict.update({c: CompleterType.DATA_SOURCE.value for c in self.data_sources})
+        meta_dict.update({c: CompleterType.DATA_SOURCE.value for c in self.data_source_names})
         meta_dict.update({c: CompleterType.FORMAT.value for c in self.formats})
         meta_dict.update({c: CompleterType.OUTPUT.value for c in self.outputs})
         meta_dict.update({c: CompleterType.FILE.value for c in self.local_files})

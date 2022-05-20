@@ -14,12 +14,14 @@ from redasql.constants import (
     FormatterType,
     OutputType,
 )
+from redasql.constants import CACHED_RESULTS_PREFIX, CACHED_QUERY_RESULTS_TYPE
 from redasql.dto import MetaCommandReturnList, NewAttribute, DataSourceResponse
 from redasql.exceptions import (
     InvalidMetaCommand,
     InvalidSettingError,
     InsufficientParametersError,
     NoDataSourceError,
+    DataSourceNotFoundError,
     SqlFileNotFoundError
 )
 from redasql.result_formatter import Formatter, formatter_factory
@@ -125,14 +127,31 @@ class ConnectCommandExecutor(MetaCommandBase):
             data_sources = self.client.get_data_sources()
             for ds in data_sources:
                 print(f'{ds.name}:{ds.type}')
+                if ds.type == 'results':
+                    print(f'{CACHED_RESULTS_PREFIX}{ds.name}:{ds.type}')
+
             complete_sources = NewAttribute(
                 attr_name='complete_data.data_sources',
-                value=[d.name for d in data_sources],
+                value=data_sources,
             )
             return MetaCommandReturnList(
                 new_attrs=[complete_sources]
             )
-        data_source = self.client.get_data_source_by_name(data_source_name)
+        try:
+            data_source = self.client.get_data_source_by_name(data_source_name)
+        except DataSourceNotFoundError:
+            # if cached_query specified, try to connect original ds name.
+            non_cached_data_source_name = re.sub(f'^{CACHED_RESULTS_PREFIX}', '', data_source_name)
+            data_source = self.client.get_data_source_by_name(non_cached_data_source_name)
+            data_source = DataSourceResponse(
+                id=data_source.id,
+                name=data_source_name,
+                type=CACHED_QUERY_RESULTS_TYPE,
+                syntax='sql',
+                paused=0,
+                pause_reason='',
+                view_only=False,
+            )
         schemas = self.client.get_schema(data_source_id=data_source.id)
         new_data_source = NewAttribute(
             value=data_source,
