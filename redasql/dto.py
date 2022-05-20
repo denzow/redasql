@@ -2,7 +2,7 @@ import datetime
 import dataclasses
 from typing import Optional, Any, List
 
-from redasql.constants import OperatorType
+from redasql.constants import OperatorType, CACHED_QUERY_RESULTS_TYPE
 
 
 @dataclasses.dataclass(frozen=True)
@@ -44,6 +44,10 @@ class DataSourceResponse:
     @property
     def is_query_results(self):
         return self.type in ('results', 'resultswithparams')
+
+    @property
+    def is_cached_query_results(self):
+        return self.type == CACHED_QUERY_RESULTS_TYPE
 
     @classmethod
     def from_response(cls, response: dict):
