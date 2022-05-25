@@ -40,3 +40,37 @@ class FormatterTest(TestCase):
         | a<br/>a |      1 |""")
         print(formatted_string)
         self.assertEqual(formatted_string, expected)
+
+    def test_markdown_pivoted_with_linebreak(self):
+        mock_query_result_response = QueryResultResponse(
+            id=1,
+            data_source_id=2,
+            retrieved_at=datetime.datetime(2022, 4, 23),
+            query_hash='xxxx',
+            query='select \'a\na\' col',
+            runtime=0.1,
+            data=QueryResultData(
+                rows=[{'col1': 'a\na', 'col2': 1}],
+                columns=[
+                    QueryResultColumn(
+                        friendly_name='col1',
+                        type='string',
+                        name='col1',
+                    ),
+                    QueryResultColumn(
+                        friendly_name='col2',
+                        type='integer',
+                        name='col2',
+                    ),
+                ]
+            )
+        )
+        formatter = MarkdownFormatter(mock_query_result_response, pivoted=True)
+        formatted_string = formatter.format()
+        expected = dedent("""\
+        | colum_name   | value   |
+        |--------------|---------|
+        | col1         | a<br/>a |
+        | col2         | 1       |""")
+        print(formatted_string)
+        self.assertEqual(formatted_string, expected)
