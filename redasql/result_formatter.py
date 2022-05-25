@@ -83,7 +83,7 @@ class MarkdownFormatter(Formatter):
         row_for_tables = []
         for row in self.rows:
             for column_name in self.column_name_list:
-                row_for_tables.append([column_name, row[column_name]])
+                row_for_tables.append([column_name, self._replace_line_break(row[column_name])])
 
         table = tabulate.tabulate(
             row_for_tables,
