@@ -689,3 +689,5 @@ SQL_KEYWORDS = [
     'YEAR',
     'ZONE',
 ]
+
+ROW_SEPARATOR = '-' * 5

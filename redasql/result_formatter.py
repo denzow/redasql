@@ -5,7 +5,7 @@ from typing import Any
 
 import tabulate
 
-from redasql.constants import FormatterType
+from redasql.constants import FormatterType, ROW_SEPARATOR
 from redasql.dto import QueryResultResponse
 
 tabulate.PRESERVE_WHITESPACE = True
@@ -85,7 +85,7 @@ class MarkdownFormatter(Formatter):
             for column_name in self.column_name_list:
                 row_for_tables.append([column_name, self._replace_line_break(row[column_name])])
             if i < len(self.rows):
-                row_for_tables.append(['-' * 5, '-' * 5])
+                row_for_tables.append([ROW_SEPARATOR, ROW_SEPARATOR])
 
         table = tabulate.tabulate(
             row_for_tables,
