@@ -50,7 +50,11 @@ class FormatterTest(TestCase):
             query='select \'a\na\' col',
             runtime=0.1,
             data=QueryResultData(
-                rows=[{'col1': 'a\na', 'col2': 1}],
+                rows=[
+                    {'col1': 'a\na', 'col2': 1},
+                    {'col1': 'b\nb', 'col2': 2},
+                    {'col1': 'c\nc', 'col2': 3}
+                ],
                 columns=[
                     QueryResultColumn(
                         friendly_name='col1',
@@ -71,6 +75,12 @@ class FormatterTest(TestCase):
         | colum_name   | value   |
         |--------------|---------|
         | col1         | a<br/>a |
-        | col2         | 1       |""")
+        | col2         | 1       |
+        | -----        | -----   |
+        | col1         | b<br/>b |
+        | col2         | 2       |
+        | -----        | -----   |
+        | col1         | c<br/>c |
+        | col2         | 3       |""")
         print(formatted_string)
         self.assertEqual(formatted_string, expected)

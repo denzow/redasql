@@ -81,9 +81,11 @@ class MarkdownFormatter(Formatter):
 
     def _format_result_to_column_base(self):
         row_for_tables = []
-        for row in self.rows:
+        for i, row in enumerate(self.rows, 1):
             for column_name in self.column_name_list:
                 row_for_tables.append([column_name, self._replace_line_break(row[column_name])])
+            if i < len(self.rows):
+                row_for_tables.append(['-' * 5, '-' * 5])
 
         table = tabulate.tabulate(
             row_for_tables,
