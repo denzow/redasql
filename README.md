@@ -263,10 +263,12 @@ metadata=# select id, object_id, org_id, created_at from favorites limit 3;
 | org_id       | 1                        |
 | id           | 2                        |
 | object_id    | 513                      |
+| -----        | -----                    |
 | created_at   | 2019-05-22T05:30:19.031Z |
 | org_id       | 1                        |
 | id           | 3                        |
 | object_id    | 514                      |
+| -----        | -----                    |
 | created_at   | 2019-05-22T08:17:12.693Z |
 | org_id       | 1                        |
 | id           | 4                        |

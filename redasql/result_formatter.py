@@ -5,8 +5,9 @@ from typing import Any
 
 import tabulate
 
-from redasql.constants import FormatterType
+from redasql.constants import FormatterType, ROW_SEPARATOR
 from redasql.dto import QueryResultResponse
+from redasql.utils import signal_last
 
 tabulate.PRESERVE_WHITESPACE = True
 
@@ -81,9 +82,11 @@ class MarkdownFormatter(Formatter):
 
     def _format_result_to_column_base(self):
         row_for_tables = []
-        for row in self.rows:
+        for is_last_row, row in signal_last(self.rows):
             for column_name in self.column_name_list:
                 row_for_tables.append([column_name, self._replace_line_break(row[column_name])])
+            if not is_last_row:
+                row_for_tables.append([ROW_SEPARATOR, ROW_SEPARATOR])
 
         table = tabulate.tabulate(
             row_for_tables,
