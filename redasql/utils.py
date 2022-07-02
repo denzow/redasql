@@ -13,7 +13,7 @@ def is_meta_command(target_str: str):
     return target_str.strip().startswith('\\')
 
 
-def signal_last(it:Iterable[Any]) -> Iterable[Tuple[bool, Any]]:
+def signal_last(it: Iterable[Any]) -> Iterable[Tuple[bool, Any]]:
     iterable = iter(it)
     ret_var = next(iterable)
     for val in iterable:

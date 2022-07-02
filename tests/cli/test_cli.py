@@ -183,6 +183,30 @@ class CliTest(TestCase):
         self.assertIn(expected, stdout)
         self.assertIn(expected, pyperclip.paste())
 
+    def test_execute_query_output_to_file(self):
+        file_name = 'result.txt'
+        sql = 'select Code, Name from country order by Code limit 3;'
+        commands = [
+            f'\\o file {file_name}',
+            sql
+        ]
+        stdout, stderr = self.process.communicate(commands_to_str(commands).encode())
+        stdout = stdout.decode('utf-8')
+        expected = dedent("""
+        +--------+-------------+
+        | Code   | Name        |
+        |--------+-------------|
+        | ABW    | Aruba       |
+        | AFG    | Afghanistan |
+        | AGO    | Angola      |
+        +--------+-------------+
+        """)[1:-1]
+        print(stdout)
+        self.assertIn(expected, stdout)
+        with open(file_name) as f:
+            result = f.read()
+            self.assertIn(expected, result)
+
     def test_execute_load_query(self):
         commands = [
             '\\l 1',
