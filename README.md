@@ -46,7 +46,8 @@ metadata=# \?
 \x: QUERY RESULT TOGGLE PIVOT.
 \f: CHANGE RESULT FORMATTER ['table', 'markdown', 'markdown_with_sql', 'csv'].
 \l: LOAD QUERY FROM REDASH.
-\o: CHANGE THE OUTPUT DESTINATION TO ['stdout', 'stdout_and_clipboard'].
+\o: CHANGE THE OUTPUT DESTINATION TO ['stdout', 'stdout_and_clipboard', 'file'].
+\i: LOAD QUERY FROM LOCAL FILE.
 ```
 
 ### execute query
@@ -310,6 +311,36 @@ id,object_id,org_id,created_at
 4,230,1,2019-05-22T08:17:12.693Z
 
 ```
+
+### change output type
+
+#### stdout(default)
+
+result to stdout only.
+
+```
+metadata=# \o stdout
+set output [stdout]
+```
+
+#### stdout_with_clipboard
+
+result to stdout and clipboard.
+
+```
+metadata=# \o stdout_and_clipboard
+set output [stdout_and_clipboard]
+```
+
+#### file
+
+result to stdout and File.
+
+```
+metadata=# \o file /tmp/result.txt
+set output [file(/tmp/result.txt)]
+```
+
 
 ### run sqlfile
 
