@@ -25,6 +25,7 @@ from redasql.exceptions import (
     SqlFileNotFoundError
 )
 from redasql.result_formatter import Formatter, formatter_factory
+from redasql.result_outputter import OutPutter, out_putter_factory
 
 
 class MetaCommandBase(ABC):
@@ -33,7 +34,7 @@ class MetaCommandBase(ABC):
                  data_source: DataSourceResponse,
                  pivoted: bool,
                  formatter: Formatter,
-                 output: OutputType):
+                 output: OutPutter):
         self.client = client
         self.data_source = data_source
         self.pivoted = pivoted
@@ -283,7 +284,7 @@ class ChangeOutputTypeCommandExecutor(MetaCommandBase):
 
     def exec(self, output_type_name: str = None, *args, **kwargs) -> Optional[MetaCommandReturnList]:
         if not output_type_name:
-            print(f'current  is [{self.output}]')
+            print(f'current is [{self.output.info}]')
             return
 
         if not OutputType.is_valid_output_type_name(output_type_name):
@@ -291,13 +292,25 @@ class ChangeOutputTypeCommandExecutor(MetaCommandBase):
                 f'{output_type_name} is not valid output type.(chose in {OutputType.values()})'
             )
         new_output_type = OutputType(output_type_name)
+        output_file_name = None
+        if new_output_type is OutputType.FILE and len(args) == 0:
+            raise InvalidSettingError(
+                f'{OutputType.FILE} needs FILE_NAME argument.)'
+            )
 
-        print(f'set output [{new_output_type.value}]')
-        return MetaCommandReturnList(
-            new_attrs=[NewAttribute(
-                value=new_output_type,
+        if len(args) > 0:
+            output_file_name = args[0]
+
+        output = out_putter_factory(new_output_type, file_name=output_file_name)
+        print(f'set output [{output.info}]')
+        new_atts = [
+            NewAttribute(
+                value=output,
                 attr_name='output'
-            )]
+            ),
+        ]
+        return MetaCommandReturnList(
+            new_attrs=new_atts
         )
 
 

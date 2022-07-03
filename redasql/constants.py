@@ -45,6 +45,7 @@ class FormatterType(enum.Enum):
 class OutputType(enum.Enum):
     STDOUT = 'stdout'
     STDOUT_AND_CLIPBOARD = 'stdout_and_clipboard'
+    FILE = 'file'
 
     @classmethod
     def values(cls):

@@ -1,10 +1,7 @@
 import os
 
-import pyperclip
-
-from textwrap import dedent
 from unittest import TestCase
-from .utils import create_redasql_process, commands_to_str
+from .utils import create_redasql_process
 
 
 class RcFileTest(TestCase):
