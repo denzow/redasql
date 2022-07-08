@@ -52,8 +52,11 @@ class ApiClient:
                 return ds
         raise DataSourceNotFoundError(f'data source id [{data_source_id}] is not found.')
 
-    def get_schema(self, data_source_id: int) -> List[SchemaResponse]:
-        res = self._get(f'api/data_sources/{data_source_id}/schema')
+    def get_schema(self, data_source_id: int, refresh: bool = True) -> List[SchemaResponse]:
+        param = ''
+        if refresh:
+            param = '?refresh=true'
+        res = self._get(f'api/data_sources/{data_source_id}/schema{param}')
         if 'schema' not in res.json():
             return []
         return [SchemaResponse.from_response(s) for s in res.json()['schema']]
