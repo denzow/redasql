@@ -34,6 +34,18 @@ class ApiClient:
             fmt = "[DEBUG LOGGING][%(asctime)s] %(levelname)s %(name)s :%(message)s"
             logging.basicConfig(level=logging.DEBUG, format=fmt)
             http_client.HTTPConnection.debuglevel = 1
+        self._version: Optional[str] = None
+        self.timeout_count = 600
+
+    @property
+    def version(self):
+        if not self._version:
+            self._version = self.get_version()
+        return self._version
+
+    @property
+    def major_version(self) -> int:
+        return int(self.version.split('.')[0])
 
     def get_data_sources(self) -> List[DataSourceResponse]:
         res = self._get('api/data_sources')
@@ -52,8 +64,16 @@ class ApiClient:
                 return ds
         raise DataSourceNotFoundError(f'data source id [{data_source_id}] is not found.')
 
-    def get_schema(self, data_source_id: int) -> List[SchemaResponse]:
-        res = self._get(f'api/data_sources/{data_source_id}/schema')
+    def get_schema(self, data_source_id: int, refresh: bool = True) -> List[SchemaResponse]:
+        param = ''
+        if refresh:
+            param = '?refresh=true'
+        res = self._get(f'api/data_sources/{data_source_id}/schema{param}')
+        res_json = res.json()
+        # over redash ver10 return job, when refresh = true.
+        if 'job' in res_json:
+            return self._wait_job_for_schema(res_json['job']['id'], timeout=self.timeout_count)
+
         if 'schema' not in res.json():
             return []
         return [SchemaResponse.from_response(s) for s in res.json()['schema']]
@@ -76,7 +96,7 @@ class ApiClient:
         return QueryResultResponse.from_response(res.json()['query_result'])
 
     def execute_query(
-            self, query: str, data_source_id: int, max_age: int = -1, timeout=10*60
+            self, query: str, data_source_id: int, max_age: int = -1
     ) -> QueryResultResponse:
         res = self._post(
             'api/query_results',
@@ -93,7 +113,7 @@ class ApiClient:
 
         # no result, wait execution.
         job_id = res_json['job']['id']
-        return self._wait_job(job_id, timeout)
+        return self._wait_job(job_id, self.timeout_count)
 
     def _wait_job(self, job_id: str, timeout: int):
         retry_counter = 0
@@ -105,6 +125,27 @@ class ApiClient:
             if res_json.get('job', {}).get('status') == 3:
                 query_result_id = res_json['job']['query_result_id']
                 return self.get_query_result(query_result_id)
+
+            # 4: error
+            if res_json.get('job', {}).get('status') == 4:
+                error_msg = res_json['job']['error']
+                raise QueryRuntimeError(error_msg)
+
+            retry_counter += 1
+            if retry_counter > timeout:
+                raise QueryTimeoutError(f'Wait Query Complete. but not completed[{timeout}].')
+            time.sleep(0.1)
+
+    def _wait_job_for_schema(self, job_id: str, timeout: int):
+        retry_counter = 0
+        while True:
+            res = self._get(f'api/jobs/{job_id}')
+            res_json = res.json()
+
+            # 3: success
+            if res_json.get('job', {}).get('status') == 3:
+                schema_result = res_json['job']['result']
+                return [SchemaResponse.from_response(s) for s in schema_result]
 
             # 4: error
             if res_json.get('job', {}).get('status') == 4:

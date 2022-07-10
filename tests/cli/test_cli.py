@@ -30,6 +30,7 @@ class CliTest(TestCase):
         - country
         - countrylanguage
         """)
+        print(stdout)
         self.assertIn(expected, stdout)
 
     def test_describe_command__with_schema(self):
