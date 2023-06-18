@@ -12,6 +12,8 @@ class CommandArgs:
     data_source_name: Optional[str]
     proxy: Optional[str]
     ignore_rc: bool
+    wait_interval_sec: float
+    timeout_count: int
     debug: bool
 
     def to_dict(self):

@@ -17,7 +17,15 @@ from redasql.exceptions import (
 
 class ApiClient:
 
-    def __init__(self, redash_url: str, api_key: str, proxy: str = None, debug: bool = False):
+    def __init__(
+        self,
+        redash_url: str,
+        api_key: str,
+        proxy: str = None,
+        wait_interval_sec: float = 0,
+        timeout_count: Optional[int] = 600,
+        debug: bool = False
+    ):
         self.redash_url = redash_url.rstrip('/')
         self.session = requests.Session()
         self.session.headers.update({'Authorization': f'Key {api_key}'})
@@ -26,6 +34,8 @@ class ApiClient:
             self.proxy = proxy
         if self.proxy:
             self.session.proxies.update({'http': self.proxy, 'https': self.proxy})
+        self.wait_interval_sec = wait_interval_sec
+        self.timeout_count = timeout_count
         if debug:
             import logging
             import http.client as http_client
@@ -35,7 +45,6 @@ class ApiClient:
             logging.basicConfig(level=logging.DEBUG, format=fmt)
             http_client.HTTPConnection.debuglevel = 1
         self._version: Optional[str] = None
-        self.timeout_count = 600
 
     @property
     def version(self):
@@ -72,7 +81,11 @@ class ApiClient:
         res_json = res.json()
         # over redash ver10 return job, when refresh = true.
         if 'job' in res_json:
-            return self._wait_job_for_schema(res_json['job']['id'], timeout=self.timeout_count)
+            return self._wait_job_for_schema(
+                res_json['job']['id'],
+                timeout=self.timeout_count,
+                wait_interval_sec=self.wait_interval_sec
+            )
 
         if 'schema' not in res.json():
             return []
@@ -113,9 +126,9 @@ class ApiClient:
 
         # no result, wait execution.
         job_id = res_json['job']['id']
-        return self._wait_job(job_id, self.timeout_count)
+        return self._wait_job(job_id, self.timeout_count, self.wait_interval_sec)
 
-    def _wait_job(self, job_id: str, timeout: int):
+    def _wait_job(self, job_id: str, timeout: int, wait_interval_sec: float):
         retry_counter = 0
         while True:
             res = self._get(f'api/jobs/{job_id}')
@@ -131,12 +144,12 @@ class ApiClient:
                 error_msg = res_json['job']['error']
                 raise QueryRuntimeError(error_msg)
 
+            time.sleep(wait_interval_sec)
             retry_counter += 1
             if retry_counter > timeout:
                 raise QueryTimeoutError(f'Wait Query Complete. but not completed[{timeout}].')
-            time.sleep(0.1)
 
-    def _wait_job_for_schema(self, job_id: str, timeout: int):
+    def _wait_job_for_schema(self, job_id: str, timeout: int, wait_interval_sec: float):
         retry_counter = 0
         while True:
             res = self._get(f'api/jobs/{job_id}')
@@ -151,11 +164,10 @@ class ApiClient:
             if res_json.get('job', {}).get('status') == 4:
                 error_msg = res_json['job']['error']
                 raise QueryRuntimeError(error_msg)
-
+            time.sleep(wait_interval_sec)
             retry_counter += 1
             if retry_counter > timeout:
-                raise QueryTimeoutError(f'Wait Query Complete. but not completed[{timeout}].')
-            time.sleep(0.1)
+                raise QueryTimeoutError(f'Wait Query Complete. but not completed[{timeout} * {wait_interval_sec}].')
 
     def _get(self, path, **kwargs):
         return self._request('GET', path, **kwargs)
