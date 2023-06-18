@@ -21,13 +21,15 @@ redasql need some arguments or environment variables.
 redasql prioritizes arguments over environment variables.
 
 
-| argument         | env                     | mean                                                                                                        |required|
-|------------------|-------------------------|-------------------------------------------------------------------------------------------------------------|---|
-| -k/--api-key     | REDASQL_REDASH_APIKEY   | API KEY(user api key)                                                                                       |True|
-| -s/--server-host | REDASQL_REDASH_ENDPOINT | Redash server hostname. ex) https://your.redash.server.host/                                                |True|
-| -p/--proxy       | REDASQL_HTTP_PROXY      | if your redash server restricted by Proxy, set url format. ex)http://user:pass@your.proxy.server:proxy-port |False|
-| -d/--data-source | None                    | initial connect datasource name.                                                                            | False                                                                                                       |
+| argument         | env                     | mean                                                                                                        | required             |
+|------------------|-------------------------|-------------------------------------------------------------------------------------------------------------|----------------------|
+| -k/--api-key     | REDASQL_REDASH_APIKEY   | API KEY(user api key)                                                                                       | True                 |
+| -s/--server-host | REDASQL_REDASH_ENDPOINT | Redash server hostname. ex) https://your.redash.server.host/                                                | True                 |
+| -p/--proxy       | REDASQL_HTTP_PROXY      | if your redash server restricted by Proxy, set url format. ex)http://user:pass@your.proxy.server:proxy-port | False                |
+| -d/--data-source | None                    | initial connect datasource name.                                                                            | False                |
 | --ignore-rc      | None                    | ignore `.redasqlrc` file                                                                                    | False(default false) |
+|--wait-interval-sec| None                    | Wait Job Pooling Interval Sec| False(default 0.1)   |
+|--timeout-count| None                    |Wait Job Pooling Count(int) | False(default 600)   |
 | --debug          | None                    | debug mode                                                                                                  | False(default false) |
 
 

@@ -34,6 +34,8 @@ class MainCommand:
         proxy: str,
         data_source_name: Optional[str],
         ignore_rc: bool,
+        wait_interval_sec: float,
+        timeout_count: int,
         debug: bool,
     ):
         self.endpoint = endpoint if endpoint else os.environ.get('REDASQL_REDASH_ENDPOINT')
@@ -50,6 +52,8 @@ class MainCommand:
             redash_url=self.endpoint,
             api_key=self.api_key,
             proxy=self.proxy,
+            wait_interval_sec=wait_interval_sec,
+            timeout_count=timeout_count,
             debug=debug,
         )
         self.pivoted = False
@@ -260,6 +264,22 @@ def init():
         default=False,
     )
     parser.add_argument(
+        '--wait-interval-sec',
+        help=dedent("""
+        Wait Job Pooling Interval Sec(float)
+        """),
+        type=float,
+        default=0.1,
+    )
+    parser.add_argument(
+        '--timeout-count',
+        help=dedent("""
+        Wait Job Pooling Count(int)
+        """),
+        type=int,
+        default=600,
+    )
+    parser.add_argument(
         '--debug',
         help=dedent("""
         debug mode on
@@ -273,6 +293,8 @@ def init():
         endpoint=args.server_host,
         data_source_name=args.data_source,
         proxy=args.proxy,
+        wait_interval_sec=args.wait_interval_sec,
+        timeout_count=args.timeout_count,
         ignore_rc=args.ignore_rc,
         debug=args.debug,
     )
