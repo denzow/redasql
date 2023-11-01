@@ -31,7 +31,7 @@ class ApiClient:
         self.redash_url = redash_url.rstrip('/')
         self.api_key = api_key
         self.proxy = proxy
-        self._create_session(self.api_key, self.proxy)
+        self._create_session()
         self.wait_interval_sec = wait_interval_sec
         self.timeout_count = timeout_count
         if debug:
@@ -126,10 +126,10 @@ class ApiClient:
         job_id = res_json['job']['id']
         return self._wait_job(job_id, self.timeout_count, self.wait_interval_sec)
 
-    def _create_session(self, api_key, proxy):
+    def _create_session(self):
         self.session = requests.Session()
-        self.session.headers.update({'Authorization': f'Key {api_key}'})
-        if proxy:
+        self.session.headers.update({'Authorization': f'Key {self.api_key}'})
+        if self.proxy:
             self.session.proxies.update({'http': self.proxy, 'https': self.proxy})
 
     def _wait_job(self, job_id: str, timeout: int, wait_interval_sec: float):
@@ -192,7 +192,7 @@ class ApiClient:
             except requests.exceptions.ConnectionError as e:
                 retry_count += 1
                 latest_error = e
-                logging.debug(f'reconnect[{retry_count}] because of [{e}]')
-                self._create_session(self.api_key, self.proxy)
+                print(f'reconnect[{retry_count}] because of [{e}]')
+                self._create_session()
 
         raise latest_error
