@@ -1,3 +1,5 @@
+import logging
+
 import requests
 import time
 from typing import Optional, List
@@ -27,13 +29,9 @@ class ApiClient:
         debug: bool = False
     ):
         self.redash_url = redash_url.rstrip('/')
-        self.session = requests.Session()
-        self.session.headers.update({'Authorization': f'Key {api_key}'})
-        self.proxy = None
-        if proxy:
-            self.proxy = proxy
-        if self.proxy:
-            self.session.proxies.update({'http': self.proxy, 'https': self.proxy})
+        self.api_key = api_key
+        self.proxy = proxy
+        self._create_session(self.api_key, self.proxy)
         self.wait_interval_sec = wait_interval_sec
         self.timeout_count = timeout_count
         if debug:
@@ -128,6 +126,12 @@ class ApiClient:
         job_id = res_json['job']['id']
         return self._wait_job(job_id, self.timeout_count, self.wait_interval_sec)
 
+    def _create_session(self, api_key, proxy):
+        self.session = requests.Session()
+        self.session.headers.update({'Authorization': f'Key {api_key}'})
+        if proxy:
+            self.session.proxies.update({'http': self.proxy, 'https': self.proxy})
+
     def _wait_job(self, job_id: str, timeout: int, wait_interval_sec: float):
         retry_counter = 0
         while True:
@@ -177,6 +181,18 @@ class ApiClient:
 
     def _request(self, method, path, **kwargs):
         url = '{}/{}'.format(self.redash_url, path)
-        response = self.session.request(method, url, **kwargs)
-        response.raise_for_status()
-        return response
+        retry_count = 0
+        max_retry = 3
+        latest_error = None
+        while retry_count <= max_retry:
+            try:
+                response = self.session.request(method, url, **kwargs)
+                response.raise_for_status()
+                return response
+            except requests.exceptions.ConnectionError as e:
+                retry_count += 1
+                latest_error = e
+                logging.debug(f'reconnect[{retry_count}] because of [{e}]')
+                self._create_session(self.api_key, self.proxy)
+
+        raise latest_error
