@@ -54,6 +54,10 @@ class ApiClient:
     def major_version(self) -> int:
         return int(self.version.split('.')[0])
 
+    @property
+    def minor_version(self) -> int:
+        return int(self.version.split('.')[0])
+
     def get_data_sources(self) -> List[DataSourceResponse]:
         res = self._get('api/data_sources')
         res_json = res.json()

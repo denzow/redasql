@@ -149,12 +149,31 @@ class SchemaResponse:
             },
         ]
     }
+    over 10.1
+    {
+        'schema': [
+            {
+                'name': 'city',
+                'columns': [
+                    {'name': 'id', 'type': 'integer'},
+                    {'name': 'created_at', 'type': 'timestamp without time zone'},
+                ]
+            },
+        ]
+    }
     """
     name: str
     columns: List[str]
 
     @classmethod
     def from_response(cls, response):
+        columns = response['columns']
+        # v10以降、少なくともpgは戻りがname: name, type: type のdictになった
+        if columns and isinstance(columns[0], dict):
+            return cls(
+                name=response['name'],
+                columns=[c['name'] for c in response['columns']],
+            )
         return cls(
             name=response['name'],
             columns=response['columns'],
