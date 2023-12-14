@@ -2,7 +2,7 @@ import argparse
 import os
 import re
 import sys
-import pkg_resources
+from importlib import metadata
 
 from textwrap import dedent
 from os.path import expanduser, exists
@@ -22,7 +22,7 @@ from redasql.result_outputter import out_putter_factory
 from redasql.completer import RedasqlCompleter, CompleteData
 
 
-VERSION = pkg_resources.get_distribution('redasql').version
+VERSION = metadata.version('redasql')
 
 
 class MainCommand:

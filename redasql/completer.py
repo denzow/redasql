@@ -44,6 +44,7 @@ class CompleteData:
         return ds_names
 
     def get_completer_words(self):
+
         words = list(set(
                 self.column_names +
                 self.schema_names +

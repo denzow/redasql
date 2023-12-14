@@ -18,13 +18,14 @@ jobs:
           - 8.0.2.b37747
           # - 9.0.0-beta.b49509  
           - 10.0.0.b50363
+          - 10.1.0.b50633
 
     steps:
       - uses: actions/checkout@v2
       - name: Install Python 3
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install os packages
         run: |
           sudo apt-get install -y xsel xvfb
