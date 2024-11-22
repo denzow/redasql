@@ -22,7 +22,7 @@ from redasql.exceptions import (
     InsufficientParametersError,
     NoDataSourceError,
     DataSourceNotFoundError,
-    SqlFileNotFoundError
+    SqlFileNotFoundError, QueryRuntimeError
 )
 from redasql.result_formatter import Formatter, formatter_factory
 from redasql.result_outputter import OutPutter, out_putter_factory
@@ -153,15 +153,26 @@ class ConnectCommandExecutor(MetaCommandBase):
                 pause_reason='',
                 view_only=False,
             )
-        schemas = self.client.get_schema(data_source_id=data_source.id)
         new_data_source = NewAttribute(
             value=data_source,
             attr_name='data_source'
         )
-        new_complete_sources = NewAttribute(
-            attr_name='complete_data.schemas',
-            value=schemas,
-        )
+
+        try:
+            schemas = self.client.get_schema(data_source_id=data_source.id)
+            new_complete_sources = NewAttribute(
+                attr_name='complete_data.schemas',
+                value=schemas,
+            )
+        except QueryRuntimeError as e:
+            if e.args[0]['message'] == 'Data source type does not support retrieving schema':
+                new_complete_sources = NewAttribute(
+                    attr_name='complete_data.schemas',
+                    value=[],
+                )
+            else:
+                raise e
+
         return MetaCommandReturnList(
             new_attrs=[
                 new_data_source,
