@@ -165,6 +165,7 @@ class ApiClient:
 
             # 3: success
             if res_json.get('job', {}).get('status') == 3:
+                print(res_json['job']['result'])
                 schema_result = res_json['job']['result']
                 return [SchemaResponse.from_response(s) for s in schema_result]
 

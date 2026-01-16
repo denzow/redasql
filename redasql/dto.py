@@ -168,15 +168,16 @@ class SchemaResponse:
     @classmethod
     def from_response(cls, response):
         columns = response['columns']
-        # v10以降、少なくともpgは戻りがname: name, type: type のdictになった
-        if columns and isinstance(columns[0], dict):
-            return cls(
-                name=response['name'],
-                columns=[c['name'] for c in response['columns']],
-            )
+        # v10.1+: dict形式 {'name': 'xxx', 'type': 'yyy'}
+        # v10以前: str形式 'xxx'
+        # 混在するケースにも対応
+        normalized_columns = [
+            c['name'] if isinstance(c, dict) else c
+            for c in columns
+        ]
         return cls(
             name=response['name'],
-            columns=response['columns'],
+            columns=normalized_columns,
         )
 
 

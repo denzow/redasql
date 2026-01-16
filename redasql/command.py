@@ -83,6 +83,9 @@ class MainCommand:
                     try:
                         self._input_handler(line)
                     except Exception as e:
+                        if self.debug:
+                            import traceback
+                            print(traceback.format_exc())
                         print(e)
 
     def splash(self):
@@ -217,6 +220,9 @@ def main():
         command.splash()
         command.load_config_from_rc_file()
     except Exception as e:
+        if args.debug:
+            import traceback
+            print(traceback.format_exc())
         print(f'[ERROR] {e}\n')
         sys.exit(1)
 
