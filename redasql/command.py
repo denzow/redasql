@@ -37,6 +37,7 @@ class MainCommand:
         wait_interval_sec: float,
         timeout_count: int,
         debug: bool,
+        no_fetch_data: bool = False,
     ):
         self.endpoint = endpoint if endpoint else os.environ.get('REDASQL_REDASH_ENDPOINT')
         self.api_key = api_key if api_key else os.environ.get('REDASQL_REDASH_APIKEY')
@@ -48,6 +49,7 @@ class MainCommand:
         self.proxy = proxy if proxy else os.environ.get('REDASQL_HTTP_PROXY')
         self.ignore_rc = ignore_rc
         self.debug = debug
+        self.no_fetch_data = no_fetch_data
         self.client = ApiClient(
             redash_url=self.endpoint,
             api_key=self.api_key,
@@ -55,6 +57,7 @@ class MainCommand:
             wait_interval_sec=wait_interval_sec,
             timeout_count=timeout_count,
             debug=debug,
+            no_fetch_data=no_fetch_data,
         )
         self.pivoted = False
         self.output = out_putter_factory(OutputType.STDOUT)
@@ -161,6 +164,17 @@ class MainCommand:
             query=query,
             data_source_id=self.data_source.id
         )
+
+        # In no-fetch-data mode, display only row count and execution time
+        if self.no_fetch_data:
+            if query_result.rows_count == 0:
+                print(f'Query OK, 0 rows ({round(query_result.runtime, 4)}s)')
+            elif query_result.rows_count == 1:
+                print(f'Query OK, 1 row ({round(query_result.runtime, 4)}s)')
+            else:
+                print(f'Query OK, {query_result.rows_count} rows ({round(query_result.runtime, 4)}s)')
+            return
+
         if query_result.rows_count == 0:
             print(dedent(f"""
             no rows returned.
@@ -293,6 +307,16 @@ def init():
         action='store_true',
         default=False,
     )
+    parser.add_argument(
+        '--no-fetch-data',
+        help=dedent("""
+        execute query but don't fetch result data.
+        only display row count and execution status.
+        useful for syntax checking or DML queries.
+        """),
+        action='store_true',
+        default=False,
+    )
     args = parser.parse_args()
     return CommandArgs(
         api_key=args.api_key,
@@ -303,6 +327,7 @@ def init():
         timeout_count=args.timeout_count,
         ignore_rc=args.ignore_rc,
         debug=args.debug,
+        no_fetch_data=args.no_fetch_data,
     )
 
 
