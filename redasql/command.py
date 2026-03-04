@@ -240,7 +240,11 @@ def main():
                 print('[ERROR] -c option requires a data source. Use -d option to specify data source.\n')
                 sys.exit(1)
             try:
-                command._input_handler(command.command)
+                # Ensure query ends with semicolon for execution
+                query = command.command.strip()
+                if not query.endswith(';'):
+                    query += ';'
+                command._input_handler(query)
             except Exception as e:
                 if args.debug:
                     import traceback
