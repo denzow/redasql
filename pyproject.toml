@@ -26,7 +26,7 @@ prompt-toolkit = "^3.0.20"
 tabulate = "^0.8.9"
 pyperclip = "^1.8.2"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 
 [tool.poetry.scripts]
 redasql = 'redasql.command:main'
