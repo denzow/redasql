@@ -21,9 +21,9 @@ jobs:
           - 10.1.0.b50633
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Python 3
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
       - name: Install os packages
@@ -32,11 +32,12 @@ jobs:
       - name: Install poetry
         uses: snok/install-poetry@v1
         with:
+          version: 1.8.3
           virtualenvs-create: true
           virtualenvs-in-project: true
       - name: Load cached venv
         id: cached-poetry-dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
@@ -55,7 +56,7 @@ jobs:
             REDASH_VERSION: ${{ matrix.redash-version }}
         working-directory: ./tests/docker/v${{env.REDASH_VERSION}}
         run: |
-          docker-compose up -d --remove-orphans
+          docker compose up -d --remove-orphans
           dockerize -timeout 60s -wait tcp://localhost:5001
       - name: test
         env:

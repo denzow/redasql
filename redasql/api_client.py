@@ -26,7 +26,8 @@ class ApiClient:
         proxy: str = None,
         wait_interval_sec: float = 0,
         timeout_count: Optional[int] = 600,
-        debug: bool = False
+        debug: bool = False,
+        no_fetch_data: bool = False
     ):
         self.redash_url = redash_url.rstrip('/')
         self.api_key = api_key
@@ -34,6 +35,7 @@ class ApiClient:
         self._create_session()
         self.wait_interval_sec = wait_interval_sec
         self.timeout_count = timeout_count
+        self.no_fetch_data = no_fetch_data
         if debug:
             import logging
             import http.client as http_client
