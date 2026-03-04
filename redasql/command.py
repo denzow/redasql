@@ -38,6 +38,7 @@ class MainCommand:
         timeout_count: int,
         debug: bool,
         no_fetch_data: bool = False,
+        command: Optional[str] = None,
     ):
         self.endpoint = endpoint if endpoint else os.environ.get('REDASQL_REDASH_ENDPOINT')
         self.api_key = api_key if api_key else os.environ.get('REDASQL_REDASH_APIKEY')
@@ -50,6 +51,7 @@ class MainCommand:
         self.ignore_rc = ignore_rc
         self.debug = debug
         self.no_fetch_data = no_fetch_data
+        self.command = command
         self.client = ApiClient(
             redash_url=self.endpoint,
             api_key=self.api_key,
@@ -231,6 +233,23 @@ def main():
     args = init()
     try:
         command = MainCommand(**args.to_dict())
+
+        # If -c option is specified, execute single query and exit
+        if command.command:
+            if not command.data_source:
+                print('[ERROR] -c option requires a data source. Use -d option to specify data source.\n')
+                sys.exit(1)
+            try:
+                command._input_handler(command.command)
+            except Exception as e:
+                if args.debug:
+                    import traceback
+                    print(traceback.format_exc())
+                print(f'[ERROR] {e}\n')
+                sys.exit(1)
+            sys.exit(0)
+
+        # Normal REPL mode
         command.splash()
         command.load_config_from_rc_file()
     except Exception as e:
@@ -317,6 +336,15 @@ def init():
         action='store_true',
         default=False,
     )
+    parser.add_argument(
+        '-c',
+        '--command',
+        help=dedent("""
+        execute a single query and exit.
+        useful for scripting and automation.
+        """),
+        default=None,
+    )
     args = parser.parse_args()
     return CommandArgs(
         api_key=args.api_key,
@@ -328,6 +356,7 @@ def init():
         ignore_rc=args.ignore_rc,
         debug=args.debug,
         no_fetch_data=args.no_fetch_data,
+        command=args.command,
     )
 
 

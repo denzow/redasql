@@ -16,6 +16,7 @@ class CommandArgs:
     timeout_count: int
     debug: bool
     no_fetch_data: bool = False
+    command: Optional[str] = None
 
     def to_dict(self):
         return dataclasses.asdict(self)
