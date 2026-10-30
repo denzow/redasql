@@ -6,7 +6,7 @@ from importlib import metadata
 
 from textwrap import dedent
 from os.path import expanduser, exists
-from typing import Optional
+from typing import Optional, Dict
 
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
@@ -15,7 +15,12 @@ import redasql.utils as utils
 from redasql.api_client import ApiClient
 from redasql.constants import FormatterType, OutputType
 from redasql.dto import CommandArgs, DataSourceResponse
-from redasql.exceptions import RedasqlException, InsufficientParametersError, NoDataSourceError
+from redasql.exceptions import (
+    RedasqlException,
+    InsufficientParametersError,
+    NoDataSourceError,
+    MissingQueryParameterError,
+)
 from redasql.metacommand_executor import meta_command_factory
 from redasql.result_formatter import formatter_factory
 from redasql.result_outputter import out_putter_factory
@@ -39,6 +44,7 @@ class MainCommand:
         debug: bool,
         no_fetch_data: bool = False,
         command: Optional[str] = None,
+        variables: Optional[Dict[str, str]] = None,
     ):
         self.endpoint = endpoint if endpoint else os.environ.get('REDASQL_REDASH_ENDPOINT')
         self.api_key = api_key if api_key else os.environ.get('REDASQL_REDASH_APIKEY')
@@ -52,6 +58,9 @@ class MainCommand:
         self.debug = debug
         self.no_fetch_data = no_fetch_data
         self.command = command
+        # values for query parameters like `{{ name }}`.
+        # given by --variable, or input interactively on REPL.
+        self.variables: Dict[str, str] = dict(variables) if variables else {}
         self.client = ApiClient(
             redash_url=self.endpoint,
             api_key=self.api_key,
@@ -68,6 +77,7 @@ class MainCommand:
         self.complete_data = CompleteData()
         self.history = FileHistory(f'{expanduser("~")}/.redasql.hist')
         self.data_source: Optional[DataSourceResponse] = None
+        self.last_answered_variables: Dict[str, str] = {}
 
         data_source_list = self.client.get_data_sources()
         self.complete_data.data_sources = data_source_list
@@ -159,6 +169,8 @@ class MainCommand:
         if not self.data_source:
             raise NoDataSourceError('Plz set datasource.(use \\c <data source name>)')
 
+        query = self._resolve_query_parameters(query)
+
         if self.data_source.is_cached_query_results:
             query = re.sub('(query_\\d+)', r'cached_\1', query)
 
@@ -198,12 +210,40 @@ class MainCommand:
             self.pivoted,
             self.formatter,
             self.output,
+            self.variables,
         )
         meta_command_return_list = e.exec(*args)
         if self.debug:
             print(command, args, meta_command_return_list)
         if meta_command_return_list:
             meta_command_return_list.apply(self)
+
+    def _resolve_query_parameters(self, query: str) -> str:
+        """
+        replace `{{ name }}` in query.
+        use values given by --variable. if not given, ask on REPL.
+        in -c mode (non interactive), missing values raise error.
+        """
+        parameter_names = utils.extract_query_parameter_names(query)
+        if not parameter_names:
+            return query
+
+        missing_names = [name for name in parameter_names if name not in self.variables]
+        if missing_names and self.command is not None:
+            raise MissingQueryParameterError(
+                f'query parameter {missing_names} is not given. use --variable NAME=VALUE.'
+            )
+
+        values = {}
+        for name in parameter_names:
+            if name in self.variables:
+                values[name] = self.variables[name]
+                continue
+            # remember latest input for next query as default.
+            answer = prompt(f'{name}? > ', default=self.last_answered_variables.get(name, ''))
+            self.last_answered_variables[name] = answer
+            values[name] = answer
+        return utils.render_query_parameters(query, values)
 
     def _execute_query(self, query: str, data_source_id: int):
         if self.debug:
@@ -349,7 +389,25 @@ def init():
         """),
         default=None,
     )
+    parser.add_argument(
+        '--variable',
+        help=dedent("""
+        value for query parameter `{{ name }}`. NAME=VALUE format.
+        can be specified multiple times.
+        i.e) --variable id=1 --variable name=foo
+        """),
+        action='append',
+        metavar='NAME=VALUE',
+        default=[],
+    )
     args = parser.parse_args()
+    variables = {}
+    for variable in args.variable:
+        try:
+            name, value = utils.parse_variable_argument(variable)
+        except ValueError as e:
+            parser.error(str(e))
+        variables[name] = value
     return CommandArgs(
         api_key=args.api_key,
         endpoint=args.server_host,
@@ -361,6 +419,7 @@ def init():
         debug=args.debug,
         no_fetch_data=args.no_fetch_data,
         command=args.command,
+        variables=variables,
     )
 
 

@@ -3,11 +3,12 @@ import sys
 import fnmatch
 import re
 
-from typing import Optional
+from typing import Optional, Dict
 from abc import ABC, abstractmethod
 
 from prompt_toolkit import prompt
 
+import redasql.utils as utils
 from redasql.api_client import ApiClient
 from redasql.constants import (
     OperatorType,
@@ -34,12 +35,15 @@ class MetaCommandBase(ABC):
                  data_source: DataSourceResponse,
                  pivoted: bool,
                  formatter: Formatter,
-                 output: OutPutter):
+                 output: OutPutter,
+                 variables: Optional[Dict[str, str]] = None):
         self.client = client
         self.data_source = data_source
         self.pivoted = pivoted
         self.formatter = formatter
         self.output = output
+        # values given by --variable
+        self.variables = variables or {}
 
     @staticmethod
     @abstractmethod
@@ -238,7 +242,10 @@ class LoadQueryExecutor(MetaCommandBase):
         query_response = self.client.get_query_by_id(int(query_id))
         query = query_response.query
         for parameter in query_response.parameters:
-            answer = prompt(f'{parameter.name}? > ')
+            if parameter.name in self.variables:
+                answer = self.variables[parameter.name]
+            else:
+                answer = prompt(f'{parameter.name}? > ')
             query = self._replace_parameter(query, parameter.name, answer)
         print(query)
         # set buffer for query execution and add history
@@ -273,7 +280,7 @@ class LoadQueryExecutor(MetaCommandBase):
 
     @staticmethod
     def _replace_parameter(base_str: str, replace_keyword, replace_value):
-        return re.sub(f'{{{{ *{replace_keyword} *}}}}', replace_value, base_str)
+        return utils.replace_query_parameter(base_str, replace_keyword, replace_value)
 
 
 class QuitCommandExecutor(MetaCommandBase):

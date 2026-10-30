@@ -256,3 +256,94 @@ class CliTest(TestCase):
         expected_result = f'{file_name} is not exists.'
         print(stdout)
         self.assertIn(expected_result, stdout)
+
+    def test_execute_query_with_parameter__prompt(self):
+        sql = "select Code, Name from country where Code = '{{ code }}';"
+        commands = [
+            sql,
+            'ABW',
+        ]
+        stdout, stderr = self.process.communicate(commands_to_str(commands).encode())
+        stdout = stdout.decode('utf-8')
+        expected = dedent("""\
+        +--------+--------+
+        | Code   | Name   |
+        |--------+--------|
+        | ABW    | Aruba  |
+        +--------+--------+
+        """)
+        print(stdout)
+        self.assertIn('code? >', stdout)
+        self.assertIn(expected, stdout)
+
+
+class CommandOptionTest(TestCase):
+    """
+    need docker
+    """
+
+    def test_repl_with_variable(self):
+        sql = "select Code, Name from country where Code = '{{ code }}';"
+        process = create_redasql_process('--ignore-rc --variable code=AFG')
+        stdout, stderr = process.communicate(f'{sql}\n'.encode())
+        stdout = stdout.decode('utf-8')
+        expected = dedent("""\
+        +--------+-------------+
+        | Code   | Name        |
+        |--------+-------------|
+        | AFG    | Afghanistan |
+        +--------+-------------+
+        """)
+        print(stdout)
+        self.assertNotIn('code? >', stdout)
+        self.assertIn(expected, stdout)
+
+    def test_command_with_variable(self):
+        sql = "select Code, Name from country where Code = '{{ code }}'"
+        process = create_redasql_process(f'--ignore-rc -c "{sql}" --variable code=AGO')
+        stdout, stderr = process.communicate()
+        stdout = stdout.decode('utf-8')
+        expected = dedent("""\
+        +--------+--------+
+        | Code   | Name   |
+        |--------+--------|
+        | AGO    | Angola |
+        +--------+--------+
+        """)
+        print(stdout)
+        self.assertEqual(0, process.returncode)
+        self.assertIn(expected, stdout)
+
+    def test_command_with_multiple_variables(self):
+        sql = "select Code, Name from country where Code in ('{{ a }}', '{{b}}') order by Code"
+        process = create_redasql_process(f'--ignore-rc -c "{sql}" --variable a=ABW --variable b=AFG')
+        stdout, stderr = process.communicate()
+        stdout = stdout.decode('utf-8')
+        expected = dedent("""\
+        +--------+-------------+
+        | Code   | Name        |
+        |--------+-------------|
+        | ABW    | Aruba       |
+        | AFG    | Afghanistan |
+        +--------+-------------+
+        """)
+        print(stdout)
+        self.assertEqual(0, process.returncode)
+        self.assertIn(expected, stdout)
+
+    def test_command_with_missing_variable(self):
+        sql = "select Code, Name from country where Code = '{{ code }}'"
+        process = create_redasql_process(f'--ignore-rc -c "{sql}"')
+        stdout, stderr = process.communicate()
+        stdout = stdout.decode('utf-8')
+        print(stdout)
+        self.assertEqual(1, process.returncode)
+        self.assertIn("query parameter ['code'] is not given", stdout)
+
+    def test_command_with_invalid_variable_format(self):
+        process = create_redasql_process('--ignore-rc -c "select 1" --variable code')
+        stdout, stderr = process.communicate()
+        stdout = stdout.decode('utf-8')
+        print(stdout)
+        self.assertEqual(2, process.returncode)
+        self.assertIn('[code] is invalid variable format', stdout)
