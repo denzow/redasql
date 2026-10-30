@@ -276,7 +276,13 @@ class CliTest(TestCase):
         self.assertIn('code? >', stdout)
         self.assertIn(expected, stdout)
 
-    def test_execute_query_with_parameter__variable_option(self):
+
+class CommandOptionTest(TestCase):
+    """
+    need docker
+    """
+
+    def test_repl_with_variable(self):
         sql = "select Code, Name from country where Code = '{{ code }}';"
         process = create_redasql_process('--ignore-rc -v code=AFG')
         stdout, stderr = process.communicate(f'{sql}\n'.encode())
@@ -291,12 +297,6 @@ class CliTest(TestCase):
         print(stdout)
         self.assertNotIn('code? >', stdout)
         self.assertIn(expected, stdout)
-
-
-class CommandOptionTest(TestCase):
-    """
-    need docker
-    """
 
     def test_command_with_variable(self):
         sql = "select Code, Name from country where Code = '{{ code }}'"

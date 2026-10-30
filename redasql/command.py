@@ -169,10 +169,10 @@ class MainCommand:
         if not self.data_source:
             raise NoDataSourceError('Plz set datasource.(use \\c <data source name>)')
 
+        query = self._resolve_query_parameters(query)
+
         if self.data_source.is_cached_query_results:
             query = re.sub('(query_\\d+)', r'cached_\1', query)
-
-        query = self._resolve_query_parameters(query)
 
         query_result = self._execute_query(
             query=query,
@@ -210,6 +210,7 @@ class MainCommand:
             self.pivoted,
             self.formatter,
             self.output,
+            self.variables,
         )
         meta_command_return_list = e.exec(*args)
         if self.debug:

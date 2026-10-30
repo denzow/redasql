@@ -367,6 +367,7 @@ Time: 0.0144s
 ```
 
 if you set values with `-v/--variable NAME=VALUE`, redasql does not ask and uses them.
+this also applies to parameters of the query loaded by `\l`.
 
 ```bash
 $ redasql -d metadata -v query_id=543
