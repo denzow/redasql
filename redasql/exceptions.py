@@ -32,3 +32,7 @@ class NoDataSourceError(RedasqlException):
 
 class SqlFileNotFoundError(RedasqlException):
     """ specified file is not exists. """
+
+
+class MissingQueryParameterError(RedasqlException):
+    """ query has parameters but values are not given. """

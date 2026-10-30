@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 
 from prompt_toolkit import prompt
 
+import redasql.utils as utils
 from redasql.api_client import ApiClient
 from redasql.constants import (
     OperatorType,
@@ -273,7 +274,7 @@ class LoadQueryExecutor(MetaCommandBase):
 
     @staticmethod
     def _replace_parameter(base_str: str, replace_keyword, replace_value):
-        return re.sub(f'{{{{ *{replace_keyword} *}}}}', replace_value, base_str)
+        return utils.replace_query_parameter(base_str, replace_keyword, replace_value)
 
 
 class QuitCommandExecutor(MetaCommandBase):

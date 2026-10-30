@@ -31,6 +31,9 @@ redasql prioritizes arguments over environment variables.
 |--wait-interval-sec| None                    | Wait Job Pooling Interval Sec| False(default 0.1)   |
 |--timeout-count| None                    |Wait Job Pooling Count(int) | False(default 600)   |
 | --debug          | None                    | debug mode                                                                                                  | False(default false) |
+| --no-fetch-data  | None                    | execute query but don't fetch result data. only display row count and execution status.                    | False(default false) |
+| -c/--command     | None                    | execute a single query and exit.                                                                            | False                |
+| -v/--variable    | None                    | value for query parameter `{{ name }}`. `NAME=VALUE` format. can be specified multiple times.               | False                |
 
 
 if you want to use redasql with direnv, rename `.envrc.sample` to `.envrc` and set attributes.
@@ -343,6 +346,48 @@ metadata=# \o file /tmp/result.txt
 set output [file(/tmp/result.txt)]
 ```
 
+
+### query parameters
+
+redash style query parameter `{{ name }}` is supported.
+redasql asks the value for each parameter before executing the query.
+the previous input is used as default on next time.
+
+```
+metadata=# select id, name from queries where id = {{ query_id }};
+query_id? > 543
++------+-----------+
+|   id | name      |
+|------+-----------|
+|  543 | New Query |
++------+-----------+
+
+1 row returned.
+Time: 0.0144s
+```
+
+if you set values with `-v/--variable NAME=VALUE`, redasql does not ask and uses them.
+
+```bash
+$ redasql -d metadata -v query_id=543
+```
+
+### execute single query (-c)
+
+`-c` executes a single query and exits without entering REPL. `-d` is required.
+query parameters must be given by `-v/--variable`. missing parameters cause an error.
+
+```bash
+$ redasql -d metadata -c "select id, name from queries where id = {{ query_id }}" -v query_id=543
++------+-----------+
+|   id | name      |
+|------+-----------|
+|  543 | New Query |
++------+-----------+
+
+1 row returned.
+Time: 0.0144s
+```
 
 ### run sqlfile
 
