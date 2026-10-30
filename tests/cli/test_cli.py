@@ -284,7 +284,7 @@ class CommandOptionTest(TestCase):
 
     def test_repl_with_variable(self):
         sql = "select Code, Name from country where Code = '{{ code }}';"
-        process = create_redasql_process('--ignore-rc -v code=AFG')
+        process = create_redasql_process('--ignore-rc --variable code=AFG')
         stdout, stderr = process.communicate(f'{sql}\n'.encode())
         stdout = stdout.decode('utf-8')
         expected = dedent("""\
@@ -300,7 +300,7 @@ class CommandOptionTest(TestCase):
 
     def test_command_with_variable(self):
         sql = "select Code, Name from country where Code = '{{ code }}'"
-        process = create_redasql_process(f'--ignore-rc -c "{sql}" -v code=AGO')
+        process = create_redasql_process(f'--ignore-rc -c "{sql}" --variable code=AGO')
         stdout, stderr = process.communicate()
         stdout = stdout.decode('utf-8')
         expected = dedent("""\
@@ -316,7 +316,7 @@ class CommandOptionTest(TestCase):
 
     def test_command_with_multiple_variables(self):
         sql = "select Code, Name from country where Code in ('{{ a }}', '{{b}}') order by Code"
-        process = create_redasql_process(f'--ignore-rc -c "{sql}" -v a=ABW -v b=AFG')
+        process = create_redasql_process(f'--ignore-rc -c "{sql}" --variable a=ABW --variable b=AFG')
         stdout, stderr = process.communicate()
         stdout = stdout.decode('utf-8')
         expected = dedent("""\
@@ -341,7 +341,7 @@ class CommandOptionTest(TestCase):
         self.assertIn("query parameter ['code'] is not given", stdout)
 
     def test_command_with_invalid_variable_format(self):
-        process = create_redasql_process('--ignore-rc -c "select 1" -v code')
+        process = create_redasql_process('--ignore-rc -c "select 1" --variable code')
         stdout, stderr = process.communicate()
         stdout = stdout.decode('utf-8')
         print(stdout)

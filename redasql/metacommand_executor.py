@@ -42,7 +42,7 @@ class MetaCommandBase(ABC):
         self.pivoted = pivoted
         self.formatter = formatter
         self.output = output
-        # values given by -v/--variable
+        # values given by --variable
         self.variables = variables or {}
 
     @staticmethod

@@ -33,7 +33,7 @@ redasql prioritizes arguments over environment variables.
 | --debug          | None                    | debug mode                                                                                                  | False(default false) |
 | --no-fetch-data  | None                    | execute query but don't fetch result data. only display row count and execution status.                    | False(default false) |
 | -c/--command     | None                    | execute a single query and exit.                                                                            | False                |
-| -v/--variable    | None                    | value for query parameter `{{ name }}`. `NAME=VALUE` format. can be specified multiple times.               | False                |
+| --variable       | None                    | value for query parameter `{{ name }}`. `NAME=VALUE` format. can be specified multiple times.               | False                |
 
 
 if you want to use redasql with direnv, rename `.envrc.sample` to `.envrc` and set attributes.
@@ -366,20 +366,20 @@ query_id? > 543
 Time: 0.0144s
 ```
 
-if you set values with `-v/--variable NAME=VALUE`, redasql does not ask and uses them.
+if you set values with `--variable NAME=VALUE`, redasql does not ask and uses them.
 this also applies to parameters of the query loaded by `\l`.
 
 ```bash
-$ redasql -d metadata -v query_id=543
+$ redasql -d metadata --variable query_id=543
 ```
 
 ### execute single query (-c)
 
 `-c` executes a single query and exits without entering REPL. `-d` is required.
-query parameters must be given by `-v/--variable`. missing parameters cause an error.
+query parameters must be given by `--variable`. missing parameters cause an error.
 
 ```bash
-$ redasql -d metadata -c "select id, name from queries where id = {{ query_id }}" -v query_id=543
+$ redasql -d metadata -c "select id, name from queries where id = {{ query_id }}" --variable query_id=543
 +------+-----------+
 |   id | name      |
 |------+-----------|

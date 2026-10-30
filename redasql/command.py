@@ -231,7 +231,7 @@ class MainCommand:
         missing_names = [name for name in parameter_names if name not in self.variables]
         if missing_names and self.command is not None:
             raise MissingQueryParameterError(
-                f'query parameter {missing_names} is not given. use -v/--variable NAME=VALUE.'
+                f'query parameter {missing_names} is not given. use --variable NAME=VALUE.'
             )
 
         values = {}
@@ -390,12 +390,11 @@ def init():
         default=None,
     )
     parser.add_argument(
-        '-v',
         '--variable',
         help=dedent("""
         value for query parameter `{{ name }}`. NAME=VALUE format.
         can be specified multiple times.
-        i.e) -v id=1 -v name=foo
+        i.e) --variable id=1 --variable name=foo
         """),
         action='append',
         metavar='NAME=VALUE',
