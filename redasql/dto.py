@@ -1,6 +1,6 @@
 import datetime
 import dataclasses
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Dict
 
 from redasql.constants import OperatorType, CACHED_QUERY_RESULTS_TYPE
 
@@ -17,6 +17,7 @@ class CommandArgs:
     debug: bool
     no_fetch_data: bool = False
     command: Optional[str] = None
+    variables: Optional[Dict[str, str]] = None
 
     def to_dict(self):
         return dataclasses.asdict(self)
